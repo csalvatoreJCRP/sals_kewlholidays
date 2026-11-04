@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Sal's Kewl Holidays</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- The music. Never focused; the page only listens and plays. -->
+    <audio id="player" preload="auto"></audio>
+
+    <!-- The decorator panel. Everything in it is a click. -->
+    <aside id="panel" class="panel hidden" aria-label="Holiday decorator">
+        <header class="panel-head">
+            <div>
+                <div class="panel-title" id="p-title">Sal's Kewl Holidays</div>
+                <div class="panel-season" id="p-season"></div>
+            </div>
+            <button class="icon-btn" id="p-close" title="Close">&times;</button>
+        </header>
+        <nav class="tabs" id="p-tabs" role="tablist"></nav>
+        <div class="panel-body" id="p-body"></div>
+        <footer class="panel-foot" id="p-foot"></footer>
+    </aside>
+
+    <!-- The placement tray: shown while a tool is up, clickable after Tab. -->
+    <div id="tray" class="tray hidden">
+        <div class="tray-hint" id="tray-hint"></div>
+        <div class="tray-row" id="tray-row"></div>
+        <div class="tray-lock" id="tray-lock">Tab</div>
+    </div>
+
+    <!-- The decorating-tips card. -->
+    <div id="tips" class="tips hidden" aria-live="polite">
+        <div class="tips-head">
+            <span class="tips-dot" id="tips-dot"></span>
+            <span class="tips-title" id="tips-title">Decorating tips</span>
+        </div>
+        <ol class="tips-list" id="tips-list"></ol>
+        <div class="tips-foot">Sal's Kewl Holidays</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
