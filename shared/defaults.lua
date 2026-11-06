@@ -11,18 +11,20 @@
 
     A DECORATION is one thing placed in the world. Three kinds:
 
-      prop    a model from the catalog, on the ground or on a wall.
+      prop    a model from the catalog, on the ground or on a wall. The
+              inflatables are props (models that ship in stream/), and so
+              are firework LAUNCHERS (shared/fireworks.lua): a prop that
+              fires shells, cakes or fountains during a show.
       lights  a string of bulbs run point to point along any surface, or
               a rope-light FIGURE (star, snowflake...) placed on a wall.
-      shape   an INFLATABLE (a lit lawn blow-up: turkey, snowman, ghost...)
-              or a WREATH, drawn in game from shapes (shared/shapes.lua),
-              no model needed. Inflatables inflate when placed, deflate
-              when removed or switched off, and sway while they are up.
+      shape   a WREATH or a lit yard piece, drawn in game from shapes
+              (shared/shapes.lua), no model needed.
 
     Every decoration belongs to a HOLIDAY (decides WHEN it shows; the
     season calendar turns each holiday on and off by date) and a GROUP
     (what a SHOW drives: a track plus a choreography of the four light
-    CHANNELS, run against every string in one group).
+    CHANNELS, run against every string in one group, and the location's
+    fireworks fired to the same music).
 ]]
 
 Config = {}
@@ -85,9 +87,10 @@ Config.Lights = {
     HaloMin         = 0.12,     -- the glow never shrinks below this radius (m), however close you stand
     HaloDistance    = 60.0,     -- the textured halo is spent on bulbs this close; farther ones keep the cheap glow
     NearDistance    = 12.0,     -- the glow strengthens a little as you come within this (m), ramping smoothly
+    FarCoreDistance = 25.0,     -- past this a bulb is one diamond instead of two (it is a few pixels across): twice the bulbs for the same cost
     SagRatio        = 0.03,
     SagMax          = 0.30,
-    MaxBulbs        = 3000,     -- nearest strings first; a four-door barn front with icicles is about 2000
+    MaxBulbs        = 3000,     -- shared by every string on screen, nearer ones get more; a four-door barn front with icicles is about 2000
     MaxBulbsPerString = 2500,   -- a single string (icicle strands included) never computes more than this
     PreviewBulbs    = 1200,     -- the placer preview's own budget
     MaxTrisPerFrame = 9000,     -- the hard stop: untextured script triangles per frame, all strings and previews together
@@ -116,8 +119,9 @@ Config.Lights = {
 
 Config.Render = { Winding = 'b' }
 
--- Inflatables and wreaths (shared/shapes.lua). Drawn every frame as lit
--- shapes, nearest first, under a per-frame budget like the lights.
+-- Wreaths and lit yard pieces (shared/shapes.lua), drawn every frame as lit
+-- shapes, nearest first, under a per-frame budget like the lights. Solid
+-- is the one setting here for the inflatables, which are real models.
 Config.Shapes = {
     Enabled        = true,
     Solid          = true,    -- the inflatable models block players and vehicles; false: everything walks and drives through them
@@ -125,17 +129,34 @@ Config.Shapes = {
     LodDistance    = 70.0,    -- beyond this a shape is one blob of its main color
     DetailDistance = 30.0,    -- within this a shape gets the fine mesh
     LightDistance  = 60.0,    -- the light inside is cast only this close
-    MaxTris        = 6000,    -- triangles per frame for drawn shapes, and never more than the strings leave of Lights.MaxTrisPerFrame
+    MaxTris        = 6000,    -- triangles per frame for wreaths and yard pieces, and never more than the strings leave of Lights.MaxTrisPerFrame
     MaxLights      = 12,      -- lights inside, per frame
     EmitLight      = true,
     LightIntensity = 1.2,
-    InflateSeconds = 4.0,     -- a newly placed inflatable takes this long to stand up
-    DeflateSeconds = 3.0,     -- and this long to go down when removed or switched off
-    Sway           = true,    -- a little lean in the wind while up
-    SwayAmount     = 0.02,
-    DeflateByDay   = false,   -- true: every inflatable lies deflated between DayFrom and DayTo (game clock)
-    DayFrom        = 8,
-    DayTo          = 17,
+}
+
+-- Fireworks (shared/fireworks.lua). Launchers are the four firework props;
+-- a show fires them to the music. Particle effects, lights and sound only:
+-- nothing is an explosion, nothing can be hurt or set alight.
+Config.Fireworks = {
+    Enabled          = true,     -- kill switch: false fires nothing on any client
+    Renderer         = 'both',   -- 'both': the game's own bursts plus drawn trails and shapes; 'game': game effects only; 'drawn': drawn sparks only
+    NightOnly        = false,    -- fire only after dark (by each player's game clock)
+    NightFrom        = 19,       -- after dark starts at this hour...
+    NightTo          = 6,        -- ...and ends at this one
+    BurstScale       = 1.6,      -- how big the bursts are (1.0 = the game effect's own size, which reads small from the street)
+    MaxLaunchers     = 64,       -- launchers per location
+    MaxShellsPerSecond = 16,     -- per client; a heavy show past this is thinned evenly
+    MaxStars         = 700,      -- drawn sparks per frame (trails, shapes); shares the lights' triangle buffer
+    RenderDistance   = 900.0,    -- a show farther than this is not fired on this client
+    SoundRange       = 700.0,    -- the booms fade out over this distance
+    Volume           = 0.8,      -- ceiling for every firework sound
+    SpeedOfSound     = true,     -- the boom of a far shell arrives after its flash, as it does outside
+    SkyLights        = true,     -- each burst lights the buildings and the ground in its color
+    MaxSkyLights     = 6,
+    SkyLightRange    = 90.0,
+    ManualFire       = true,     -- decorators may fire by hand (the launch board and /holiday launch)
+    MaxCountdown     = 21600,    -- a countdown may be set at most this many seconds ahead (6 h)
 }
 
 Config.Music = {
@@ -184,8 +205,11 @@ Config.Music = {
     },
 }
 
--- Shows: steps of { beats, ch = { pattern x4 } }, looping until the track ends.
--- Patterns: on, off, twinkle, chase, alternate, fade, wave, flicker.
+-- Shows: steps of { beats, ch = { pattern x4 }, fw = { fireworks x4 } }, looping
+-- until the track ends. Light patterns: on, off, twinkle, chase, alternate,
+-- fade, wave, flicker. fw is optional, per channel: none, beat, double,
+-- salvo, sweep, cake, fountain, shape, finale (shared/fireworks.lua); it is
+-- what "Fireworks: from the show" fires.
 Config.Shows = {
     classic = { label = 'Classic', steps = { { beats = 8, ch = { 'twinkle', 'twinkle', 'twinkle', 'twinkle' } } } },
     dance = { label = 'Dance', steps = {
@@ -205,10 +229,20 @@ Config.Shows = {
         { beats = 8, ch = { 'on', 'on', 'on', 'on' } } } },
     strobe = { label = 'Strobe', steps = {
         { beats = 0.5, ch = { 'on', 'off', 'on', 'off' } }, { beats = 0.5, ch = { 'off', 'on', 'off', 'on' } } } },
+    -- A light show written with fireworks steps, the example for the Shows
+    -- editor: channel 1 on the beat, 2 sweeping, 3 the cakes, 4 the
+    -- fountains and the big moments.
+    skyshow = { label = 'Sky Show', steps = {
+        { beats = 4, ch = { 'on', 'off', 'off', 'off' },     fw = { 'beat', 'none', 'none', 'fountain' } },
+        { beats = 4, ch = { 'on', 'on', 'off', 'off' },      fw = { 'beat', 'sweep', 'none', 'none' } },
+        { beats = 4, ch = { 'on', 'on', 'on', 'off' },       fw = { 'beat', 'none', 'cake', 'none' } },
+        { beats = 4, ch = { 'chase', 'chase', 'chase', 'on' }, fw = { 'double', 'sweep', 'cake', 'salvo' } },
+        { beats = 4, ch = { 'twinkle', 'twinkle', 'twinkle', 'twinkle' }, fw = { 'beat', 'none', 'none', 'shape' } },
+        { beats = 4, ch = { 'alternate', 'alternate', 'alternate', 'alternate' }, fw = { 'double', 'double', 'cake', 'salvo' } } } },
 }
 
 Config.Persistence = { Enabled = true, File = 'data/decorations.json', SettingsFile = 'data/settings.json', PresetsFile = 'data/presets.json', SaveDelay = 5, Snapshots = 3 }
-Config.Limits = { Enabled = true, Log = true, place = { 20, 30 }, edit = { 30, 30 }, show = { 6, 60 }, state = { 6, 60 }, settings = { 20, 60 }, thumb = { 400, 60 } }
+Config.Limits = { Enabled = true, Log = true, place = { 20, 30 }, edit = { 30, 30 }, show = { 6, 60 }, state = { 6, 60 }, settings = { 20, 60 }, thumb = { 400, 60 }, fire = { 24, 10 } }
 -- OpenKey is the default key that opens the panel (FiveM key name: 'ADD' is
 -- numpad +, 'F7', 'HOME', 'NUMPAD5' ...). It is only the DEFAULT: each player
 -- can rebind it under Settings > Key Bindings > FiveM, and a change here only
@@ -264,7 +298,7 @@ Schema = {
         { path = 'Lights.Renderer',        type = 'select', label = 'Light renderer', options = { 'sprite', 'core', 'marker', 'off' }, help = 'sprite is the real look. core drops the halo (no textured drawing); marker and off are diagnostics.' },
         { path = 'Lights.MaxSpritePolys',  type = 'int',    label = 'Halo polys per frame (hard cap)', min = 0, max = 4000, help = 'Textured polys per frame. Bulbs past the cap draw without a halo. Lower it if the client ever crashes near a lot of lights.' },
         { path = 'Lights.RenderDistance',  type = 'number', label = 'Light render distance (m)', min = 20, max = 500 },
-        { path = 'Lights.MaxBulbs',        type = 'int',    label = 'Bulbs per frame (budget)', min = 100, max = 20000, help = 'Nearest strings first; the rest wait. Players scale this with their quality setting.' },
+        { path = 'Lights.MaxBulbs',        type = 'int',    label = 'Bulbs per frame (budget)', min = 100, max = 20000, help = 'Shared by every string on screen, nearer strings getting more. A string with less than it needs thins out evenly instead of going dark. Players scale this with their quality setting.' },
         { path = 'Lights.MaxPoints',       type = 'int',    label = 'Points per string', min = 2, max = 64 },
         { path = 'Lights.MaxLength',       type = 'number', label = 'Max string length (m)', min = 5, max = 1000 },
         { path = 'Lights.HaloScale',       type = 'number', label = 'Halo size (x core)', min = 1, max = 8 },
@@ -280,20 +314,34 @@ Schema = {
         { path = 'Render.Winding',         type = 'select', label = 'Triangle winding', options = { 'b', 'a', 'both' }, help = 'If bulbs are invisible, try the other; "both" always works at twice the cost.' },
     } },
     { section = 'shapes', label = 'Inflatables and wreaths', items = {
-        { path = 'Shapes.Enabled',        type = 'bool',   label = 'Draw inflatables and wreaths', help = 'Off: none are drawn on any client (diagnostic).' },
+        { path = 'Shapes.Enabled',        type = 'bool',   label = 'Draw wreaths and yard pieces', help = 'Off: no wreath or lit yard piece is drawn on any client (diagnostic). The inflatable models are props and are not affected.' },
         { path = 'Shapes.Solid',          type = 'bool',   label = 'Inflatable models are solid', help = 'On: players and vehicles bump into the inflatable models. Off: everything passes through them, for a server whose doorways and walks keep getting blocked.' },
         { path = 'Shapes.RenderDistance', type = 'number', label = 'Render distance (m)', min = 20, max = 500 },
         { path = 'Shapes.LodDistance',    type = 'number', label = 'Detail distance (m)', min = 10, max = 300, help = 'Beyond this a shape is drawn as one blob of its main color.' },
         { path = 'Shapes.DetailDistance', type = 'number', label = 'Fine detail within (m)', min = 5, max = 200, help = 'Closer than this a shape gets the fine mesh; beyond it the coarse one.' },
-        { path = 'Shapes.MaxTris',        type = 'int',    label = 'Triangles per frame (budget)', min = 500, max = 40000, help = 'A Santa is about 1500 up close and 450 beyond the detail distance. Nearest first; the rest are blobs. Players scale it with their quality setting.' },
+        { path = 'Shapes.MaxTris',        type = 'int',    label = 'Triangles per frame (budget)', min = 500, max = 40000, help = 'A wreath is a few hundred up close and far fewer beyond the detail distance. Nearest first; the rest are blobs. Players scale it with their quality setting.' },
         { path = 'Shapes.MaxLights',      type = 'int',    label = 'Lights inside, per frame', min = 0, max = 100 },
         { path = 'Shapes.LightIntensity', type = 'number', label = 'Light inside, intensity', min = 0, max = 10 },
-        { path = 'Shapes.InflateSeconds', type = 'number', label = 'Inflate time (s)', min = 0.5, max = 30 },
-        { path = 'Shapes.DeflateSeconds', type = 'number', label = 'Deflate time (s)', min = 0.5, max = 30 },
-        { path = 'Shapes.Sway',           type = 'bool',   label = 'Sway in the wind' },
-        { path = 'Shapes.DeflateByDay',   type = 'bool',   label = 'Deflate during the day', help = 'Every inflatable lies in a heap between the hours below (game clock) and stands up again at dusk.' },
-        { path = 'Shapes.DayFrom',        type = 'int',    label = 'Day starts (hour)', min = 0, max = 23 },
-        { path = 'Shapes.DayTo',          type = 'int',    label = 'Day ends (hour)', min = 0, max = 23 },
+    } },
+    { section = 'fireworks', label = 'Fireworks', items = {
+        { path = 'Fireworks.Enabled',          type = 'bool',   label = 'Fireworks', help = 'Off: no client fires anything (shows still run their lights and music).' },
+        { path = 'Fireworks.Renderer',         type = 'select', label = 'Look', options = { 'both', 'game', 'drawn' }, help = "both: the game's own bursts, plus drawn trails and holiday shapes. game: the game's effects only. drawn: drawn sparks only (for an older game build, or to compare)." },
+        { path = 'Fireworks.NightOnly',        type = 'bool',   label = 'Only after dark', help = "By each player's game clock: a player whose clock says daytime sees nothing fired." },
+        { path = 'Fireworks.NightFrom',        type = 'int',    label = 'After dark from (hour)', min = 0, max = 23 },
+        { path = 'Fireworks.NightTo',          type = 'int',    label = 'After dark until (hour)', min = 0, max = 23 },
+        { path = 'Fireworks.BurstScale',       type = 'number', label = 'Burst size', min = 0.5, max = 3, help = "1.0 is the game effect's own size, which reads small from the street; 1.6 looks like a real shell over a square." },
+        { path = 'Fireworks.MaxLaunchers',     type = 'int',    label = 'Launchers per location', min = 1, max = 256 },
+        { path = 'Fireworks.MaxShellsPerSecond', type = 'number', label = 'Shells per second (per player)', min = 1, max = 40, help = 'A heavy show past this is thinned evenly, never cut off. Players scale it with their quality setting.' },
+        { path = 'Fireworks.MaxStars',         type = 'int',    label = 'Drawn sparks per frame', min = 0, max = 3000, help = "Trails and shapes. They share the string lights' triangle buffer, which is held back for them while a show fires." },
+        { path = 'Fireworks.RenderDistance',   type = 'number', label = 'Visible within (m)', min = 100, max = 3000 },
+        { path = 'Fireworks.SoundRange',       type = 'number', label = 'Heard within (m)', min = 50, max = 3000 },
+        { path = 'Fireworks.Volume',           type = 'number', label = 'Volume ceiling (0-1)', min = 0, max = 1 },
+        { path = 'Fireworks.SpeedOfSound',     type = 'bool',   label = 'Sound arrives late with distance', help = 'A shell 340 m away is heard a second after it is seen, as outside.' },
+        { path = 'Fireworks.SkyLights',        type = 'bool',   label = 'Bursts light up the area' },
+        { path = 'Fireworks.MaxSkyLights',     type = 'int',    label = 'Burst lights at once', min = 0, max = 32 },
+        { path = 'Fireworks.SkyLightRange',    type = 'number', label = 'Burst light range (m)', min = 10, max = 300 },
+        { path = 'Fireworks.ManualFire',       type = 'bool',   label = 'Decorators may fire by hand', help = 'The launch board in the Shows tab and /holiday launch.' },
+        { path = 'Fireworks.MaxCountdown',     type = 'int',    label = 'Longest countdown (s)', min = 10, max = 86400, help = "How far ahead a countdown may be set. 21600 is six hours: set the New Year's Eve one at dinner." },
     } },
     { section = 'music', label = 'Music', items = {
         { path = 'Music.Near',      type = 'number', label = 'Full volume within (m)', min = 1, max = 200 },

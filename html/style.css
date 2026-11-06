@@ -167,3 +167,43 @@ table.grid select option { background: #1b1f2d; }
 .tips-list { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.45; }
 .tips-list li { margin-bottom: 7px; }
 .tips-foot { margin-top: 6px; font-size: 10px; opacity: 0.5; text-align: right; letter-spacing: 0.4px; }
+
+/* ------------------------------------------------------------------ */
+/* Fireworks                                                           */
+/* ------------------------------------------------------------------ */
+/* Ten tabs: they scroll sideways rather than squeeze. */
+.tabs { overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { height: 0; }
+.tab { padding: 8px 6px; }
+
+.board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
+.board-col { display: flex; flex-direction: column; gap: 4px; background: var(--bg-2); border-radius: 7px; padding: 6px; }
+.board-col .label { margin: 0 0 2px; font-size: 11px; }
+.item.editor { flex-wrap: wrap; align-items: flex-end; border-color: var(--line); }
+.item.editor .main { flex: 1 1 100%; }
+
+/* The countdown: a quiet pill while it is far off, the big number for
+   the last ten seconds, and the banner at zero. */
+.countdown { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none;
+    color: #fff; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.75), 0 0 2px rgba(0, 0, 0, 0.9); }
+.countdown.small { top: 3vh; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px; text-shadow: none; }
+.countdown.small .cd-num { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.countdown.small .cd-label { font-size: 11px; color: var(--muted); }
+.countdown.big { top: 22vh; }
+.countdown.big .cd-num { font-size: 22vh; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; animation: cd-pop 1s ease-out infinite; }
+.countdown.big .cd-label { font-size: 16px; opacity: 0.85; }
+.countdown.banner { top: 18vh; }
+.countdown.banner .cd-num { font-size: 9vh; font-weight: 800; letter-spacing: 1px; animation: cd-glow 1.2s ease-in-out infinite alternate; }
+.countdown.banner .cd-label { display: none; }
+@keyframes cd-pop { 0% { transform: scale(1.25); opacity: 1; } 80% { transform: scale(1); opacity: 0.9; } 100% { opacity: 0.6; } }
+@keyframes cd-glow { from { text-shadow: 0 0 20px rgba(255, 210, 120, 0.6), 0 2px 18px rgba(0, 0, 0, 0.75); } to { text-shadow: 0 0 46px rgba(255, 210, 120, 0.95), 0 2px 18px rgba(0, 0, 0, 0.75); } }
+@media (prefers-reduced-motion: reduce) { .countdown .cd-num { animation: none !important; } }
+/* A list never grows wider than the panel, whatever one row holds. */
+.list { grid-template-columns: minmax(0, 1fr); }
+/* Long button rows (the loads, the fireworks programs) wrap as chips. */
+.seg.wrap { display: flex; flex-wrap: wrap; gap: 4px; border: 0; overflow: visible; }
+.seg.wrap button { border: 1px solid var(--line); border-radius: 6px; }
+.seg.wrap button + button { border-left: 1px solid var(--line); }
+.item.wrap { flex-wrap: wrap; }
+.item.wrap .main { flex: 1 1 100%; }
+.item.wrap .d { white-space: normal; }

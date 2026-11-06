@@ -62,6 +62,34 @@ Free, escrow-protected, no dependencies.
   decorated eggs, shamrocks, hay bales, roses, and more. Props the server's
   game build does not have are hidden from the menu with a count, never an
   error. Add your own streamed props with one line in `shared/holidays.lua`.
+- **Fireworks set to the music.** Four launchers (mortar rack, rocket,
+  cake, fountain), placed like props at a location and loaded with peony,
+  chrysanthemum, willow, ring, spiral, crackle, strobe, salute or holiday
+  shapes, in the holiday's colors. Start a show and they fire with it:
+  **Follow the music** bursts shells on the melody's own notes (every
+  shipped track has a score written from its notes), low notes from one
+  end of the row and high notes from the other, long notes as big shells,
+  salvos on each new verse, and a finale. Or a program on the beat (Grand,
+  Steady, Gentle, Rapid, Finale only), or the show's own fireworks steps.
+  Light, normal or heavy.
+- **Shapes in the sky.** Hearts, stars, shamrocks, pumpkins, a menorah, the
+  Star of David, wedding rings, and at New Year's the year itself, spelled
+  across the sky. Drawn shapes turn to face whoever is watching.
+- **Countdowns.** Count down to a number of seconds, a time of day or
+  midnight (server time): everyone nearby sees the clock, the last ten
+  seconds big, a salvo bursts on zero, the banner says "HAPPY NEW YEAR!
+  2027" (or the holiday's own), and the show starts.
+- **A launch board.** Fire by hand for everyone nearby: a shell or a salvo
+  per channel, sweeps, cakes, fountains, shapes and the finale, from the
+  Shows tab or from the keyboard in launch mode.
+- **Real-looking, harmless.** The game's own firework effects, tinted to
+  the launcher's colors, with drawn trails rising to each burst, light that
+  falls on the buildings below, and booms that arrive late with distance
+  (sound travels 343 m a second). Nothing is an explosion: nobody can be
+  hurt and nothing catches fire. Players can turn fireworks off, turn them
+  down, or ask for fewer flashes.
+- **Rehearse.** Run any show with its fireworks for yourself only, nobody
+  else sees or hears it, before the city does.
 - **Light shows.** Pick a track and a choreography and every string in your
   group dances to it, in sync for everyone nearby. Strings on different
   channels (roof, windows, tree, door) play against each other. Five shows
@@ -98,8 +126,10 @@ Free, escrow-protected, no dependencies.
   carol), shown in chat and on an on-screen card.
 - **No lag.** Props are local, non-networked objects streamed by distance;
   the server never owns an entity. Lights are rendered under a hard
-  per-frame budget (bulbs and real light sources, nearest first) that a
-  player can scale with `/holiday quality`. Bulb positions are computed
+  per-frame budget (bulbs, glow and real light sources) shared by every
+  string on screen, nearer strings getting more, that a player can scale
+  with `/holiday quality`. A string that gets less than it needs thins out
+  evenly along its length instead of going dark. Bulb positions are computed
   once per string, not per frame.
 - **Server-authoritative.** Every placement, move, removal and show is
   checked on the server: permission, catalog, reach, caps, rate limits.
@@ -164,12 +194,13 @@ your server.
 `/holiday` or **numpad +** opens the decorator panel (and closes it again).
 The key is a FiveM key binding, so each player can change it under Settings
 > Key Bindings > FiveM; admins set the default with `Commands.OpenKey`. Tabs:
-Props, Lights, Figures, Inflatables, Shows, Edit, Locations, Tips, Settings.
+Props, Lights, Figures, Inflatables, Fireworks, Shows, Edit, Locations, Tips,
+Settings.
 
 Point at any row in the panel and it appears in the world where your
 crosshair is: a prop turns slowly so every side shows, a figure hangs on
-the wall you are aiming at, an inflatable stands there inflated. Figures,
-inflatables and wreaths also have pictures in the panel, drawn from the
+the wall you are aiming at, an inflatable stands there. Inflatables have
+photos in the panel; figures and wreaths have pictures drawn from the
 same data the game draws; props carry a one-line description and their
 height and width.
 
@@ -202,18 +233,29 @@ found). Each outline click adds its own stroke, so a sign and the roof
 under it can go in one string.
 
 **Figures.** Pick a figure, colors and a light type, click Hang on a wall,
-aim at a wall, scroll to size it, left click to hang it.
+aim at a wall, scroll to size it, left click to hang it. Up and Down raise
+or lower it. A light pole counts as a wall: aim at the side of the pole
+that faces the street and the figure lies flat against it, facing out.
+
+**Hanging from a string.** Figures, wreaths and props can hang from a
+string of lights that is already placed. String lights across a road from
+pole to pole, then pick a figure and aim at the string: it hangs under the
+string at that spot, follows the sag, and faces you, so a figure hung from
+a span over a road faces the traffic. Up and Down lower it on a longer
+drop. **Hang on strings** in the tray turns it off, and holding Alt ignores
+strings for that moment. The piece is its own decoration: moving or
+removing the string later leaves it where it was hung.
 
 **Inflatables.** The game has no lawn inflatables, so this resource ships
-its own: seventy models in `stream/`, each built from the lit shapes in
-`shared/shapes.lua` and fused into one smooth vinyl skin, with an emissive
+its own: seventy models in `stream/`, each built from lit shapes and
+fused into one smooth vinyl skin, with an emissive
 shader so it glows at night and a light inside that falls on the ground
 around it. They are real props: they cast shadows, take the game's
 lighting, and you bump into them. Pick one, click Place, aim: it is placed
 like any prop (scroll rotates, Repeat and Align work). Each comes in the
-size shown on its card. Inflatables placed with an earlier version are
-still drawn the old way and still inflate and deflate; aim at one with the
-Edit tool and the tray offers **Deflate** / **Inflate**.
+size shown on its card. An inflatable placed with a version before 1.1.1
+as a drawn shape becomes its model, in the same place, the first time the
+server starts on the new version.
 
 **Wreaths** and other wall pieces (window candles, bunting, banners) sit at
 the top of the Props tab and hang flat on the wall you aim at; Page Up /
@@ -223,8 +265,7 @@ Page Down set the size.
 along it; with Align on, the next one snaps into a row along the path at
 the same spacing, so a sidewalk takes three clicks. **Lit yard pieces**
 (deer, stakes, orbs, the lily stands and candle vigil of the Funeral set)
-are below the inflatables in the same tab; they stand where placed and do
-not inflate.
+are below the inflatables in the same tab and stand where placed.
 
 **Wedding, Birthday, Funeral.** Like Party, these have no dates: they are
 in season whenever the Party set is (Settings). Give each event its own
@@ -283,6 +324,67 @@ a group dropdown, plus **Undo my last placement**. `/holiday remove` takes
 the nearest decoration, `/holiday undo` the last one you placed. Admins
 can clear a whole location from the Edit tab's list.
 
+### Fireworks
+
+**Placing launchers.** The Fireworks tab lists the four launchers. Pick one,
+choose what it is **loaded with**, its **colors** (the holiday's own, or
+gold, silver or rainbow), a **channel**, how high it **bursts** (low,
+medium, high), its **aim** (tilted up to 35 degrees toward its front, to fan
+a row of mortars), and whether it is a **hidden launch point** (no prop:
+shells rise from a roof or from behind a wall; decorators see a marker
+there while preview is on). **Preview** fires that launcher thirty meters
+in front of you, for you only. **Place** works like any prop: it joins your
+current location, aligns, repeats.
+
+A location's launchers are ordered across it along their longest spread, so
+"low notes on the left" means one end of your row and high notes the other.
+A good layout: mortars along the back, cakes in a row in front of them,
+fountains at the very front, each row on its own channel.
+
+Every firework prop is a launcher, including ones placed before 1.2.0 from
+the Props tab; they start loaded Mixed, on channel 1, in the holiday's
+first colors. Change a placed launcher's settings from the Edit tab
+(**Settings...**), and **Test** fires it for you only. The pick tool has
+Test too.
+
+**Shows with fireworks.** In the Shows tab, under the choreography, choose
+the **Fireworks** program and **how much** (light, normal, heavy). A show at
+a location with launchers fires them; a location with launchers and no
+light strings can run a show too.
+
+- **Follow the music**: the track's score (every shipped track has one);
+  a track you added gets Grand at its tempo.
+- **Grand / Steady / Gentle / Rapid**: programs on the beat.
+- **Finale only**: nothing until the last part of the track.
+- **From the show**: the show's own fireworks steps. In Settings > Shows,
+  each step has a fireworks pattern per channel: beat, double, salvo,
+  sweep, cake, fountain, shape or finale. The shipped **Sky Show** is an
+  example.
+
+**Rehearse** runs a show and its fireworks for you only. **Countdown** opens
+a row on the track: enter seconds (`30`), a time of day in server time
+(`23:59:50`, `00:00`) or `midnight`, and start it. Everyone near the
+location sees the clock, big for the last ten seconds; a salvo bursts on
+zero, the holiday's banner shows, and the show starts. **Stop** cancels a
+countdown.
+
+**Firing by hand.** With launchers at your location, the Shows tab has a
+**launch board**: Shell and Salvo for each channel, and Salvo, Sweep, Cake,
+Fountains, Shape and Finale for all of them. **Launch mode** does the same
+from the keyboard with the panel closed: `1`-`4` a shell from that channel
+(Shift: a salvo), `5` sweep, `6` cake, `7` fountains, `8` shape, `9` twice
+for the finale, Backspace to leave.
+
+**For each player.** Settings > My settings: fireworks on or off, their
+volume, and **fewer flashes** (no light from the bursts, no strobes or
+white salutes) for anyone who finds flashing hard to watch.
+
+**Checking a game build.** `/holiday fwtest` fires every effect in turn in
+front of you and writes each one's name in F8, with whether its particle
+dictionary loaded. The heart, star and face shapes and the large bursts
+need a newer game build; on an older one the drawn shapes and the base
+game's bursts stand in.
+
 **Tips.** `/holiday tips [holiday]` prints the decorating tips for the holiday
 in season (or the one named) and shows them on a card for 45 seconds.
 
@@ -295,15 +397,22 @@ in season (or the one named) and shows them on a card for 45 seconds.
 | `/holiday prop <holiday> <model>` | Decorators | Place a prop by model name |
 | `/holiday lights <holiday> [palette] [pattern] [type]` | Decorators | String lights |
 | `/holiday figure <holiday> <figure> [palette]` | Decorators | Hang a figure |
-| `/holiday inflate <holiday> <name> [height]` | Decorators | Place an inflatable or a wreath by name |
+| `/holiday inflate <holiday> <name>` | Decorators | Place an inflatable by name (`turkey`, `arch_candy`) |
+| `/holiday wreath <holiday> <name> [size]` | Decorators | Place a wreath, wall piece or yard piece by name |
 | `/holiday edit` | Decorators | Aim at a decoration: remove, move, edit, regroup it |
 | `/holiday remove` / `undo` | Decorators | Remove the nearest / last decoration |
 | `/holiday locations` | Anyone | Every location, with counts and distance |
 | `/holiday location <name>` | Anyone | Set the location new decorations join (spaces allowed) |
 | `/holiday go <layout>` | Decorators | Travel to a saved layout |
 | `/holiday channel <1-4>` | Anyone | Set the channel new strings use |
-| `/holiday show [track] [show]` | Decorators | Start a show in your group |
-| `/holiday stop [group]` | Decorators | Stop the show |
+| `/holiday show [track] [show] [fireworks] [light\|normal\|heavy]` | Decorators | Start a show in your group; fireworks is `score`, `grand`, `steady`, `gentle`, `rapid`, `finale`, `show` or `off` (default: `score` where there are launchers) |
+| `/holiday rehearse <track> [show] [fireworks]` | Decorators | The show for you only |
+| `/holiday countdown <seconds\|HH:MM\|midnight> <track> [show] [fireworks]` | Decorators | Count down, then the show |
+| `/holiday stop [group]` | Decorators | Stop the show or the countdown |
+| `/holiday launch` | Decorators | Launch mode: fire from the keyboard |
+| `/holiday fire <shell\|salvo\|sweep\|cake\|fountain\|shape\|finale> [channel]` | Decorators | Fire by hand |
+| `/holiday fireworks on\|off\|calm\|normal\|volume <0-1>` | Anyone | Fireworks, for you only |
+| `/holiday fwtest` | Anyone | Every firework effect in front of you, named in F8 |
 | `/holiday tips [holiday]` | Anyone | Decorating tips |
 | `/holiday mute` / `unmute` | Anyone | Holiday music, for you only |
 | `/holiday soundtest [track]` | Anyone | Play a track for a few seconds, no show needed |
@@ -330,14 +439,20 @@ Open `/holiday` and the Settings tab. Sections:
   bulb and light budgets, halo and sag, whether bulbs cast light, hearing
   distances and volume.
 - **Inflatables and wreaths**: whether the inflatable models are solid,
-  render and detail distances, the per-frame
-  shape and light budgets, inflate and deflate times, sway, and deflating
-  by day with the day hours.
+  and, for wreaths and yard pieces, render and detail distances and the
+  per-frame shape and light budgets.
+- **Fireworks**: on or off for everyone; the look (`both`: the game's
+  bursts plus drawn trails and shapes; `game`; `drawn`); burst size; only after dark
+  (by each player's game clock); launchers per location; shells per
+  second and drawn sparks per frame (each player's quality setting scales
+  them); how far they are seen and heard; volume; sound arriving late with
+  distance; burst light; firing by hand; the longest countdown.
 - **Custom props**: add any streamed model to a holiday (model, label, wall
   mount).
 - **Custom tracks**: register an `.ogg` you dropped in `audio/`.
 - **Shows**: copy a shipped choreography and edit its steps, or build one
-  from scratch: beats per step, a pattern per channel.
+  from scratch: beats per step, a light pattern per channel and, optionally,
+  a fireworks pattern per channel.
 - **Reset** puts everything back to the shipped defaults.
 
 Changes are validated on the server, saved to `data/settings.json`, and
@@ -350,15 +465,26 @@ are in `shared/defaults.lua`.
 -- Server
 exports['sals_kewlholidays']:GetActiveHolidays()        --> { christmas = true, ... }
 exports['sals_kewlholidays']:GetSeasonMode()            --> 'auto'
-exports['sals_kewlholidays']:StartShow(group, track, show) --> boolean
+exports['sals_kewlholidays']:StartShow(group, track, show, fw) --> boolean
+-- fw: nil for none, or { mode = 'score' | 'grand' | 'steady' | 'gentle' | 'rapid' | 'finale' | 'show',
+--                         intensity = 'light' | 'normal' | 'heavy' }
+exports['sals_kewlholidays']:StartCountdown(group, target, track, show, fw) --> boolean
+-- target: seconds, 'HH:MM[:SS]' (server time) or 'midnight'
+exports['sals_kewlholidays']:FireFireworks(group, action, channel) --> boolean
+-- action: 'shell' | 'salvo' | 'sweep' | 'cake' | 'fountain' | 'shape' | 'finale'
 exports['sals_kewlholidays']:StopShow(group)            --> boolean
 exports['sals_kewlholidays']:IsShowRunning(group)       --> boolean
 exports['sals_kewlholidays']:GetDecorations()           --> list of records
 ```
 
 Records: `{ id, kind = 'prop' | 'lights', holiday, group, by, byName, updated,
-model, coords, heading }` for props; `{ ..., points, palette, pattern,
+model, coords, heading }` for props, plus `fw = { load, palette, channel,
+lift, tilt, hidden }` for a launcher; `{ ..., points, palette, pattern,
 spacing, channel, length }` for lights.
+
+The firework effects, launchers, loads, holiday shapes and programs are in
+`shared/fireworks.lua`, readable and editable: an effect lists the game's
+particle effects to try in order, with what to draw where none loads.
 
 ## Updates
 
@@ -401,33 +527,18 @@ version, the newest CHANGELOG section, every file's size and CRC32, with
 with `update.json` to the root of the public repository on the branch
 customers' servers are set to.
 
-## Rebuilding the inflatable models
-
-The seventy models in `stream/` are generated from `shared/shapes.lua`:
-
-1. `python tools/build-inflatables.py [name ...]` fuses each shape's
-   ellipsoids into one skin (signed distance field, marching cubes) and
-   writes `build/inflatables/<model>.obj` + `.json` and the palette
-   (needs lupa, numpy, scikit-image, Pillow).
-2. `blender -b -P tools/blender-inflatables.py -- build/inflatables build/xml`
-   (Blender with the Sollumz extension) builds a drawable per model with
-   an emissive material, sphere collision and a point light, and the
-   `.ytyp`, as CodeWalker XML.
-3. `dotnet tools/cwconv/bin/Release/net8.0/cwconv.dll build/xml/<model>.ydr.xml stream/<model>.ydr`
-   for each model and the `.ytyp` (build the converter once with
-   `dotnet build -c Release tools/cwconv`; it needs `CodeWalker.Core.dll`).
-4. `python tools/inflatable-models.py` rewrites
-   `shared/inflatable_models.lua` from what is actually in `stream/`.
-
-A model's name is `sk_infl_<shape>_<height in dm>`; `--sizes 1.8,2.6`
-builds other heights.
-
 ## Rebuilding the music
 
 `tools/build-audio.py` synthesizes every track from note data (numpy and
 ffmpeg required). Edit a tune, run it, and the `.ogg` in `audio/` is
 replaced. The public-domain melodies are marked as such in the file; the
 rest are original.
+
+`tools/build-fireworks.py` writes the firework scores
+(`shared/fireworks_scores.lua`) from the same notes, and synthesizes the
+firework sounds in `audio/sfx/`. Run it after changing a tune so its score
+still lands on the notes. A track you added has no score; Follow the music
+gives it the Grand program at its tempo.
 
 ## Support
 

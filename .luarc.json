@@ -4,7 +4,9 @@
     "workspace.library": [],
     "diagnostics.globals": [
         "Config", "Schema", "Settings", "Lang", "Locales", "Util", "Holidays", "Figures", "Shapes", "InflatableModels",
-        "Client", "Decor", "Lights", "Show", "Placer", "UI",
+        "Client", "Decor", "Lights", "Show", "Placer", "UI", "Fireworks", "FireworkScores", "Sky",
+        "RequestNamedPtfxAsset", "HasNamedPtfxAssetLoaded", "RemoveNamedPtfxAsset", "UseParticleFxAsset",
+        "SetParticleFxNonLoopedColour", "SetParticleFxNonLoopedAlpha", "StartParticleFxNonLoopedAtCoord", "DrawLightWithRange",
         "DrawSpritePoly", "DrawTexturedPoly", "GetFrameCount", "GetFinalRenderedCamCoord", "GetFinalRenderedCamRot",
         "CreateRuntimeTxd", "CreateRuntimeTextureFromImage",
         "Framework", "RateLimit", "Store", "Update", "PerformHttpRequest",

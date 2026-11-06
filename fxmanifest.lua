@@ -4,17 +4,19 @@ lua54 'yes'
 
 name 'sals_kewlholidays'
 author 'C. Salvatore'
-description 'In-game holiday decorating: props, inflatables that inflate and deflate, wreaths, string lights and rope-light figures on any building, synchronized light shows with music, a season calendar that swaps the decor for you, decorating tips, and every setting edited in game'
-version '1.0.0'
+description 'In-game holiday decorating: props, lit inflatables, wreaths, string lights and rope-light figures on any building, synchronized light shows and fireworks displays set to music, countdowns, a season calendar that swaps the decor for you, and every setting edited in game'
+version '1.2.5'
 
 shared_scripts {
     'shared/defaults.lua',  -- must load first: defines Config (the defaults) and Schema; there is no config.lua
     'shared/util.lua',
     'shared/settings.lua',  -- applies the in-game settings over the defaults
     'shared/inflatable_models.lua',  -- generated: the inflatables that ship as models; must load before holidays
-    'shared/holidays.lua',  -- the holiday catalog; reads Config.Holidays, Config.CustomProps and InflatableModels
+    'shared/fireworks.lua', -- launchers, shells, choreography; must load before holidays (every holiday gets the launchers)
+    'shared/fireworks_scores.lua',  -- generated: a firework score per shipped track (tools/build-fireworks.py)
+    'shared/holidays.lua',  -- the holiday catalog; reads Config.Holidays, Config.CustomProps, InflatableModels and Fireworks
     'shared/figures.lua',   -- rope-light figure templates
-    'shared/shapes.lua',    -- inflatables and wreaths, built from shapes
+    'shared/shapes.lua',    -- wreaths and lit yard pieces, drawn from shapes
     'locales/*.lua',        -- glob so a server owner can drop in a translation
     'locales/init.lua'      -- builds Lang from Config.Locale; must load last
 }
@@ -23,8 +25,9 @@ client_scripts {
     'client/framework.lua', -- must load before everything: defines Client (notify)
     'client/main.lua',      -- defines Decor: the registry, prop streaming, season state, settings
     'client/lights.lua',    -- the string-light renderer; reads Decor
-    'client/shapes.lua',    -- the inflatable and wreath renderer (inflate, deflate, sway); reads Decor
-    'client/show.lua',      -- synchronized shows and the audio player; drives lights
+    'client/shapes.lua',    -- the wreath and yard-piece renderer; reads Decor
+    'client/show.lua',      -- synchronized shows and the audio player; drives lights and fireworks
+    'client/fireworks.lua', -- the fireworks engine: shells, sparks, sky light, sound; draws with the lights' primitives
     'client/placer.lua',    -- the point-and-click placement tools
     'client/thumbs.lua',    -- /holiday thumbs: photographs the prop catalog (needs screenshot-basic)
     'client/ui.lua'         -- the decorator panel and the /holiday command; uses all of the above
@@ -46,7 +49,8 @@ files {
     'html/script.js',
     'html/bulb.png',        -- the bulb sprite, loaded as a runtime texture by client/lights.lua
     'html/thumbs/*.jpg',    -- prop pictures, taken once with /holiday thumbs; new ones are served after a restart
-    'audio/*.ogg'           -- every track; a track an owner adds is picked up on restart
+    'audio/*.ogg',          -- every track; a track an owner adds is picked up on restart
+    'audio/sfx/*.ogg'       -- the fireworks' sounds (tools/build-fireworks.py)
 }
 
 -- Streamed models: the inflatables as real props (built by tools/build-inflatables.py
@@ -69,13 +73,16 @@ escrow_ignore {
     'shared/holidays.lua',  -- the prop and holiday catalog
     'shared/inflatable_models.lua',  -- the generated list of inflatable models, part of the catalog
     'shared/figures.lua',   -- figure templates; owners may add their own
-    'shared/shapes.lua',    -- inflatable and wreath templates; owners may add their own
+    'shared/shapes.lua',    -- wreath and yard-piece templates; owners may add their own
+    'shared/fireworks.lua', -- the firework effects, launchers and programs; owners may tune them
+    'shared/fireworks_scores.lua',
     'locales/*.lua',        -- the strings, and the template for a new language
 
     -- NUI files must ship unencrypted: the CEF browser cannot read
     -- escrow-encrypted files, and an encrypted html/ means no panel and no music.
     'html/*',
     'audio/*',
+    'audio/sfx/*',
 
     -- The framework seam, readable so a server with its own framework can
     -- fit it without a support ticket.

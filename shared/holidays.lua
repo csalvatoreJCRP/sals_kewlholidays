@@ -513,6 +513,24 @@ for name, h in pairs(Holidays.Catalog) do
         end
     end
     for _, p in ipairs(h.props or {}) do props[#props + 1] = p end
+    -- Every holiday has the four firework launchers (shared/fireworks.lua);
+    -- the Fireworks tab places them. A firework prop already in the list
+    -- (Firework (box) under Independence Day) is that launcher.
+    for _, rack in ipairs((Fireworks and Fireworks.Racks) or {}) do
+        local found = false
+        for i, p in ipairs(props) do
+            if p.model == rack.model then
+                local copy = {}
+                for k, v in pairs(p) do copy[k] = v end
+                copy.launcher = rack.name
+                props[i] = copy
+                found = true
+            end
+        end
+        if not found then
+            props[#props + 1] = { model = rack.model, label = rack.label, desc = rack.desc, launcher = rack.name }
+        end
+    end
     base[name] = { props = props, from = h.from, to = h.to, enabled = h.enabled }
 end
 

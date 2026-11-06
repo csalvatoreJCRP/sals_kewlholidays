@@ -1,5 +1,189 @@
 # Changelog
 
+## [1.2.5] - 2026-11-06
+
+### Inflatables
+
+- **Clean colors on every inflatable.** Where two colors met (a beard and a
+  coat, a sack and a sleigh) the models showed thin stripes of unrelated
+  colors, gold and white, in stair steps. Every model is rebuilt with each
+  color cut cleanly along a smooth line.
+- **Trims are printed on, not stuck on.** Belts, coat stripes and hems,
+  Mrs. Claus's apron, the nutcracker's braid, the pilgrim's collar, the
+  worker's reflective stripes, the graduate's stole, the jester's collar, the
+  egg's bands, Uncle Sam's stripes, the firecracker's bands and the grill's
+  band were thin discs that stood off the body like plates. They are now
+  part of the surface.
+- **Santa in his sleigh, redesigned.** He sits side-on to the street, facing
+  it and waving, with his sack behind him; the sleigh has a tall curled prow,
+  a backrest, and two runners on the ground that curl up at the front and
+  join the sleigh. (He used to look at the prow, and the runners were loose
+  rods that read as yellow plates on the ground.)
+- **The eagle's wings** grow from its shoulders and sweep up; they used to
+  only touch the body and showed gaps.
+- Same model names: everything already placed updates in place, nothing to
+  do on a server.
+
+### Lights
+
+- **The strings in front of you stay whole and keep their glow on a fully
+  lit house.** The per-frame share of bulbs counted every string within 10 m
+  of its CENTER as equally far, so a long string beside you counted as far
+  and the strands right in front of you thinned and lost their halos. Shares
+  now go by each string's nearest bulb, and the glow leans harder still to
+  the strings close to you.
+- **Distant bulbs cost half.** Past 25 m (`Lights.FarCoreDistance`) a bulb
+  is one diamond instead of two, so a big display keeps more of its bulbs.
+- **No bare diamonds.** A bulb that does not get a textured halo this frame
+  draws a wider, softer under-glow instead of a hard diamond.
+
+## [1.2.4] - 2026-11-06
+
+- **Icicles stay icicles on a busy street.** Where a lot of strings are in
+  view at once, an icicle string handed fewer bulbs than its top run drew a
+  sparse run and no icicles at all, so it looked like a plain string with
+  the bulbs spaced far apart. A string short of bulbs now shares them
+  between the run and its icicles, thinning both evenly. Nothing to redo:
+  strings you already put up draw correctly after the update.
+
+## [1.2.3] - 2026-11-06
+
+- **Shapes and trails read from the street.** Drawn sparks (the rising
+  trails, the holiday shapes, the year in the sky) were sized like a string's
+  bulbs and came out a couple of pixels wide 100 m up. They are now about
+  twice the size, and shapes twice that.
+- **A salvo fires whole.** The per-player shell budget let through only a
+  second and a half of shells at once, so a big salvo lost half its shells.
+  It now holds a whole salvo, and `Fireworks.MaxShellsPerSecond` defaults
+  to 16 (was 10).
+
+## [1.2.2] - 2026-11-06
+
+- **Bigger bursts, and a setting for it.** Seen in game, the game's firework
+  effects at their own size read small from the street (about 12 m across at
+  80 m up). They now burst at 1.6 times that by default; Settings >
+  Fireworks > **Burst size** (`Fireworks.BurstScale`, 0.5 to 3) changes it.
+
+## [1.2.1] - 2026-11-06
+
+- **Burst light toned down.** Seen in game on the first show: each burst lit
+  the square below it like daylight. It now tints the walls and the ground
+  in the shell's color instead (a fifth of the strength).
+
+## [1.2.0] - 2026-11-06
+
+### Fireworks
+
+- **Launchers.** A new Fireworks tab places four launchers like props: a
+  mortar rack (aerial shells), a rocket, a cake (a fan of small shots) and
+  a fountain. Each is loaded with Mixed (follows the music), peony,
+  chrysanthemum, willow, ring, spiral, crackle, strobe, salute or holiday
+  shapes; colored with the holiday's palettes or gold, silver and rainbow;
+  given a channel, a burst height and an aim; and can be a hidden launch
+  point with no prop, for roofs. Preview fires one in front of you, for you
+  only. Every firework prop is a launcher, including ones already placed
+  from the Props tab (they start loaded Mixed, on channel 1).
+- **Fireworks set to the music.** A show fires the location's launchers.
+  **Follow the music** uses a score written from each track's own notes:
+  every shipped track has one, so shells burst on the melody, low notes on
+  one end of the row and high notes on the other, long notes as big
+  shells, salvos at each new verse, and a finale. Programs on the beat
+  (Grand, Steady, Gentle, Rapid, Finale only) suit any track, including
+  ones you added. Light, normal or heavy. A location with only launchers
+  can run a show.
+- **Shapes in the sky**: hearts, stars, shamrocks, pumpkins, bats, the
+  menorah, wedding rings, the turkey and more, per holiday; at New Year's,
+  the year spelled across the sky.
+- **Countdowns** to seconds, a time of day or midnight (server time):
+  everyone nearby sees the clock, a salvo bursts on zero, the holiday's
+  banner shows and the show starts.
+- **Firing by hand**: a launch board in the Shows tab and a keyboard
+  launch mode (`/holiday launch`), for everyone nearby.
+- **Rehearse** a show and its fireworks for yourself only.
+- **Fireworks steps in the Shows editor**: a fireworks pattern per channel
+  per step, played by "From the show". The new **Sky Show** is an example.
+- The game's own firework effects, tinted, with drawn trails and shapes,
+  burst light on the buildings below, and synthesized sounds that arrive
+  late with distance. Nothing is an explosion; nobody can be hurt.
+  Players can turn fireworks off, down, or to fewer flashes.
+- `/holiday fwtest` fires every effect in front of you and names it in F8,
+  with whether the game build has it.
+
+### Configuration
+
+- New **Settings > Fireworks** section (`Config.Fireworks`). Nothing to
+  change on update: fireworks are on, by day and night, with the shipped
+  limits.
+- New rate limit bucket `fire` (hand firing).
+- Exports: `StartShow` takes an optional fifth argument for fireworks;
+  new `StartCountdown` and `FireFireworks`.
+
+### Also
+
+- `/holiday help` listed `/holiday inflate` as placing wreaths; it now
+  lists `/holiday wreath` for those.
+- Ten panel tabs scroll sideways instead of squeezing.
+
+## [1.1.1] - 2026-11-06
+
+- **Inflatable models are actually solid now.** Their collision was built
+  into every model, but with no collision flags, so players and vehicles
+  passed straight through whatever "Inflatable models are solid" was set
+  to. All 70 models now carry the standard flags. Turning the setting off
+  still lets everything pass through.
+- **Icicle lights no longer lose their icicles when you turn.** An icicle
+  string is its run plus every strand, and when the frame was busy the
+  strands were what went (in 1.0, all of them, leaving a bare run that came
+  and went with the camera). The run now always draws whole; the strands
+  thin first to every second or third bulb down each icicle, then to every
+  other icicle. Far away, strand bulbs that would draw on top of each other
+  are skipped, which frees bulbs for everything else.
+- **The old drawn inflatables are gone.** Every inflatable has been a real
+  model since 1.0; the drawn versions they replaced no longer ship, and
+  neither do the Edit tray's Deflate / Inflate, the inflate, deflate and
+  sway animation, or deflating by day. An inflatable placed as a drawn
+  shape with an earlier version becomes its model, in the same place and
+  facing the same way, the first time the server starts on 1.1.1; the
+  console says how many it converted. `/holiday inflate <holiday> <name>`
+  now places the model; wreaths, wall pieces and yard pieces moved to
+  `/holiday wreath <holiday> <name> [size]`.
+- **High and ultra quality no longer drop the nearest strings.** Their bulb
+  budget was more than the engine's triangle buffer can take, and since
+  strings paint far to near, the near ones were cut. The budget now stops
+  at what the buffer holds.
+
+**Configuration:** `Shapes.InflateSeconds`, `Shapes.DeflateSeconds`,
+`Shapes.Sway`, `Shapes.SwayAmount`, `Shapes.DeflateByDay`, `Shapes.DayFrom`
+and `Shapes.DayTo` are removed (they only drove the drawn inflatables);
+saved values for them are ignored. The settings section is still called
+"Inflatables and wreaths". No other breaking changes.
+
+## [1.1.0] - 2026-11-05
+
+- **Strings across an intersection all stay lit.** The per-frame budgets
+  (bulbs, glow and cast lights) used to go to the nearest strings first,
+  so with three spans over a road the fourth got no glow at all, and with
+  icicle lights it was not drawn. Every string on screen now gets a share,
+  nearer strings a bigger one, and none gets more than it can use. A
+  string handed fewer bulbs than it has thins out evenly along its whole
+  length; before, it drew its first stretch and the rest stayed dark. Six
+  30 m spans over one intersection stay lit end to end at medium quality.
+  Strings beyond the halo distance no longer take any of the glow budget.
+- **Hang figures, wreaths and props from a string of lights.** Aim at a
+  placed string and the piece hangs under it at that spot, follows the
+  sag, and faces you, so a figure on a span over a road faces the traffic.
+  **Hang on strings** in the tray turns it off (remembered per player);
+  Alt ignores strings for that moment. Anything solid in front of the
+  string still wins.
+- **Figures go up and down.** Up and Down (and the tray's Raise buttons)
+  move a figure from where you aimed: higher on a light pole, lower on a
+  longer drop under a string. The figure hint now says a pole works like
+  a wall.
+- Owner's manual: new sections on light poles and hanging from a string,
+  and a few garbled characters (arrows, middle dots) fixed.
+
+No configuration changes. No breaking changes.
+
 ## [1.0.0] - 2026-11-04
 
 First release. Everything from the betas below, plus:

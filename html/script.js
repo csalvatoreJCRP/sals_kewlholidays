@@ -25,7 +25,10 @@
         data: null, tab: 'props', holiday: null, search: '',
         lights: { palette: null, pattern: 'twinkle', style: 'mini', channel: 1, spacing: 0.2, sag: true },
         figure: { name: null, palette: null, pattern: 'on', style: 'rope', channel: 1, size: 1.2 },
-        show: { track: null, show: 'classic' },
+        show: { track: null, show: 'classic', fwMode: 'score', fwIntensity: 'normal' },
+        fw: { rack: 'mortar', load: 'mixed', palette: null, channel: 1, lift: 1.0, tilt: 0, hidden: false },
+        countdown: { target: '10', open: false },
+        editing: null,
         settings: null, tipsInline: null,
     };
     const T = key => (S.data && S.data.strings && S.data.strings[key]) || key;
@@ -33,7 +36,8 @@
     // ------------------------------------------------------------------
     // Panel
     // ------------------------------------------------------------------
-    const TABS = ['props', 'lights', 'figures', 'inflatables', 'shows', 'edit', 'places', 'tips', 'settings'];
+    const TABS = ['props', 'lights', 'figures', 'inflatables', 'fireworks', 'shows', 'edit', 'places', 'tips', 'settings'];
+    const PLACING = ['props', 'lights', 'figures', 'inflatables', 'fireworks'];
 
     // ------------------------------------------------------------------
     // Thumbnails and hover previews
@@ -131,13 +135,13 @@
         }
         const body = $('p-body');
         body.innerHTML = '';
-        if (!d.who.decorator && ['props', 'lights', 'figures', 'inflatables'].includes(S.tab)) {
+        if (!d.who.decorator && PLACING.includes(S.tab)) {
             body.appendChild(el('div', 'note', T('ui_not_decorator')));
         }
-        if (['props', 'lights', 'figures', 'inflatables'].includes(S.tab) && !h.inSeason) {
+        if (PLACING.includes(S.tab) && !h.inSeason) {
             body.appendChild(el('div', 'note', T('ui_off_season_note').replace('%{holiday}', h.label).replace('%{mode}', d.season.mode)));
         }
-        ({ props: renderProps, lights: renderLights, figures: renderFigures, inflatables: renderInflatables, shows: renderShows, edit: renderEdit, places: renderPlaces, tips: renderTips, settings: renderSettings })[S.tab](body);
+        ({ props: renderProps, lights: renderLights, figures: renderFigures, inflatables: renderInflatables, fireworks: renderFireworks, shows: renderShows, edit: renderEdit, places: renderPlaces, tips: renderTips, settings: renderSettings })[S.tab](body);
 
         const foot = $('p-foot');
         foot.innerHTML = '';
@@ -231,9 +235,10 @@
             list.appendChild(it);
         }
     }
-    // One inflatable or wreath: thumbnail, name, what it is, default size, Place.
-    // An inflatable that ships as a model (s.model) places that prop and
-    // shows its photo; the rest are drawn from their parts.
+    // One inflatable, wreath or yard piece: thumbnail, name, what it is,
+    // default size, Place. An inflatable is a model (s.model): it places
+    // that prop and shows its photo. Wreaths and yard pieces are drawn
+    // from their parts.
     function shapeRow(h, s) {
         const it = el('div', 'item');
         it.appendChild(s.model ? propThumb(s.model) : shapeThumb(s.parts, s.kind));
@@ -408,13 +413,128 @@
         return box;
     }
 
+    // ---- Fireworks ----
+    // Pick a launcher, load it, color it, give it a channel and a height,
+    // and place it like a prop. Preview fires one in front of you.
+    function fwPalettes(container, h, state, onChange) {
+        const list = h.fwPalettes || h.palettes;
+        if (state.palette && !list.some(p => p.name === state.palette)) state.palette = null;
+        const wrap = el('div', 'swatches');
+        for (const p of list) {
+            const b = el('button', 'sw');
+            for (const c of p.colors) { const i = el('i'); i.style.background = rgb(c); i.style.color = rgb(c); b.appendChild(i); }
+            b.appendChild(document.createTextNode(p.name.replace(/_/g, ' ')));
+            b.setAttribute('aria-pressed', (state.palette || list[0].name) === p.name);
+            b.addEventListener('click', () => { state.palette = p.name; onChange(); });
+            wrap.appendChild(b);
+        }
+        container.appendChild(wrap);
+    }
+    function launcherSettings(container, h, rack, st, onChange) {
+        if (!rack.loads.includes(st.load)) st.load = rack.loads[0];
+        const lb = labeled(container, T('ui_fw_load'));
+        help(lb.firstChild, T('ui_fw_load_help'));
+        segment(lb, rack.loads, st.load, v => { st.load = v; onChange(); }, v => T('fw_load_' + v));
+        lb.lastChild.classList.add('wrap');
+        fwPalettes(labeled(container, T('ui_palette')), h, st, onChange);
+        const row = el('div', 'row');
+        segment(labeled(row, T('ui_channel')), [1, 2, 3, 4], st.channel, v => { st.channel = v; onChange(); });
+        const lifts = S.data.fireworks.lifts;
+        const cur = (lifts.reduce((a, l) => Math.abs(l[1] - st.lift) < Math.abs(a[1] - st.lift) ? l : a, lifts[1]))[0];
+        segment(labeled(row, T('ui_fw_lift')), lifts.map(l => l[0]), cur, v => { st.lift = lifts.find(l => l[0] === v)[1]; onChange(); }, v => T('fw_lift_' + v));
+        container.appendChild(row);
+        const tBox = labeled(container, `${T('ui_fw_tilt')}: ${st.tilt}°`);
+        const range = el('input'); range.type = 'range'; range.min = -35; range.max = 35; range.step = 5; range.value = st.tilt;
+        range.addEventListener('input', () => { st.tilt = parseInt(range.value, 10); tBox.firstChild.textContent = `${T('ui_fw_tilt')}: ${st.tilt}°`; });
+        range.addEventListener('change', () => onChange(true));
+        tBox.appendChild(range);
+        const hr = el('div', 'row');
+        hr.appendChild(el('span', '', T('ui_fw_hidden')));
+        const hs = el('button', 'switch'); hs.setAttribute('role', 'switch'); hs.setAttribute('aria-checked', !!st.hidden);
+        hs.addEventListener('click', () => { st.hidden = !st.hidden; onChange(); });
+        hr.appendChild(hs);
+        help(hr, T('ui_fw_hidden_help'));
+        container.appendChild(hr);
+    }
+    function renderFireworks(body) {
+        const d = S.data;
+        holidayChips(body, render);
+        const h = holiday();
+        if (!d.fireworks.enabled) body.appendChild(el('div', 'note', T('ui_fw_disabled')));
+        const racks = h.launchers || [];
+        if (!racks.length) { body.appendChild(el('div', 'note', '-')); return; }
+        if (!racks.some(r => r.name === S.fw.rack)) S.fw.rack = racks[0].name;
+        const box = section(body, T('ui_fw_racks'), T('ui_fw_help') + ' ' + T('ui_hover_hint'));
+        const list = el('div', 'list');
+        for (const r of racks) {
+            const it = el('div', 'item' + (r.name === S.fw.rack ? ' active' : ''));
+            it.appendChild(propThumb(r.model));
+            const main = el('div', 'main');
+            main.appendChild(el('div', 't', r.label));
+            main.appendChild(el('div', 'd', r.desc));
+            it.appendChild(main);
+            it.addEventListener('click', () => { S.fw.rack = r.name; render(); });
+            hoverable(it, 'prop', h.name, r.model);
+            list.appendChild(it);
+        }
+        box.appendChild(list);
+        const rack = racks.find(r => r.name === S.fw.rack);
+        launcherSettings(body, h, rack, S.fw, () => render());
+        const fwOf = () => ({ load: S.fw.load, palette: S.fw.palette || (h.fwPalettes || h.palettes)[0].name, channel: S.fw.channel, lift: S.fw.lift, tilt: S.fw.tilt, hidden: S.fw.hidden });
+        const row = el('div', 'row');
+        const go = el('button', 'btn primary', T('ui_place'));
+        go.disabled = !d.who.decorator;
+        go.title = T('ui_tray_hint_prop');
+        go.addEventListener('click', () => post('placeLauncher', { holiday: h.name, rack: rack.name, fw: fwOf() }));
+        const pv = el('button', 'btn', T('ui_fw_preview'));
+        pv.addEventListener('click', () => post('previewLoad', { holiday: h.name, rack: rack.name, fw: fwOf() }));
+        row.appendChild(go); row.appendChild(pv);
+        body.appendChild(row);
+        const here = d.fireworks.here || 0;
+        body.appendChild(el('div', 'note', here ? T('ui_fw_here').replace('%{count}', here).replace('%{group}', d.settings.group)
+            .replace('%{channels}', d.fireworks.counts.map((n, i) => `${i + 1}: ${n}`).join(' · ')) : T('ui_fw_none_here').replace('%{group}', d.settings.group)));
+        if (d.fireworks.nightOnly) body.appendChild(el('div', 'note', T('ui_fw_night').replace('%{from}', d.fireworks.nightFrom).replace('%{to}', d.fireworks.nightTo)));
+    }
+
+    // The launch board: fire by hand, for everyone nearby.
+    function launchBoard(container) {
+        const d = S.data;
+        const box = section(container, T('ui_fw_board'), T('ui_fw_board_help'));
+        const grid = el('div', 'board');
+        for (let c = 1; c <= 4; c++) {
+            const col = el('div', 'board-col');
+            col.appendChild(el('div', 'label', `${T('ui_channel')} ${c} · ${d.fireworks.counts[c - 1]}`));
+            const sh = el('button', 'btn small', T('ui_fw_shell')); sh.addEventListener('click', () => post('fire', { action: 'shell', channel: c }));
+            const sv = el('button', 'btn small', T('ui_fw_salvo')); sv.addEventListener('click', () => post('fire', { action: 'salvo', channel: c }));
+            sh.disabled = sv.disabled = !d.fireworks.counts[c - 1];
+            col.appendChild(sh); col.appendChild(sv);
+            grid.appendChild(col);
+        }
+        box.appendChild(grid);
+        const row = el('div', 'row');
+        for (const a of ['salvo', 'sweep', 'cake', 'fountain', 'shape']) {
+            const b = el('button', 'btn small', T('ui_fw_' + a)); b.addEventListener('click', () => post('fire', { action: a, channel: 0 })); row.appendChild(b);
+        }
+        const fin = el('button', 'btn small danger', T('ui_fw_finale'));
+        fin.addEventListener('click', () => {
+            if (fin.dataset.armed) { post('fire', { action: 'finale', channel: 0 }); delete fin.dataset.armed; fin.textContent = T('ui_fw_finale'); }
+            else { fin.dataset.armed = '1'; fin.textContent = T('ui_fw_finale_arm'); setTimeout(() => { delete fin.dataset.armed; fin.textContent = T('ui_fw_finale'); }, 3000); }
+        });
+        row.appendChild(fin);
+        box.appendChild(row);
+        const lm = el('button', 'btn', T('ui_fw_launch_mode'));
+        lm.addEventListener('click', () => post('launchMode'));
+        box.appendChild(lm);
+    }
+
     // ---- Shows ----
     function renderShows(body) {
         const d = S.data;
         groupPicker(body, { compact: true });
         if (d.nowPlaying) {
             const np = el('div', 'item active');
-            const main = el('div', 'main'); main.appendChild(el('div', 't', `${T('ui_now_playing')}: ${trackLabel(d.nowPlaying.track)}`)); main.appendChild(el('div', 'd', d.nowPlaying.show));
+            const main = el('div', 'main'); main.appendChild(el('div', 't', `${d.nowPlaying.rehearsal ? T('ui_fw_rehearsal') : T('ui_now_playing')}: ${trackLabel(d.nowPlaying.track)}`));
+            main.appendChild(el('div', 'd', d.nowPlaying.show + (d.nowPlaying.fw ? ` · ${T('ui_tab_fireworks')}: ${T('fw_mode_' + d.nowPlaying.fw)}` : '')));
             np.appendChild(main);
             const stop = el('button', 'btn small', T('ui_stop')); stop.addEventListener('click', () => post('stopShow'));
             np.appendChild(stop);
@@ -425,6 +545,18 @@
         const shows = (S.holiday !== '*' && h.shows && h.shows.length) ? h.shows.concat(d.shows.map(s => s.name).filter(n => !h.shows.includes(n))) : d.shows.map(s => s.name);
         if (!shows.includes(S.show.show)) S.show.show = shows[0];
         segment(labeled(body, T('ui_choose_show')), shows, S.show.show, v => { S.show.show = v; render(); }, v => (d.shows.find(s => s.name === v) || {}).label || v);
+        // Fireworks for the show: which program, how much.
+        const F = d.fireworks;
+        const showDef = d.shows.find(x => x.name === S.show.show) || {};
+        const fwBox = section(body, `${T('ui_fw_mode')} · ${T('ui_fw_launchers').replace('%{count}', F.here || 0)}`, T('fw_mode_' + (S.show.fwMode === 'off' ? 'score' : S.show.fwMode) + '_help'));
+        const modes = ['off'].concat(F.modes.filter(m => m !== 'show' || showDef.fw));
+        if (!modes.includes(S.show.fwMode)) S.show.fwMode = 'score';
+        segment(fwBox, modes, S.show.fwMode, v => { S.show.fwMode = v; render(); }, v => v === 'off' ? T('ui_fw_off') : T('fw_mode_' + v));
+        fwBox.lastChild.classList.add('wrap');
+        if (S.show.fwMode !== 'off') segment(labeled(fwBox, T('ui_fw_intensity')), F.intensities, S.show.fwIntensity, v => { S.show.fwIntensity = v; render(); }, v => T('fw_intensity_' + v));
+        if (!F.enabled) fwBox.appendChild(el('div', 'note', T('ui_fw_disabled')));
+        else if (!F.here) fwBox.appendChild(el('div', 'note', T('ui_fw_none_here').replace('%{group}', d.settings.group)));
+        const fwSend = () => ({ mode: S.show.fwMode, intensity: S.show.fwIntensity });
         const list = el('div', 'list');
         const tracks = d.tracks.filter(t => S.holiday === '*' || t.holiday === S.holiday || !t.holiday).sort((a, b) => (b.inSeason - a.inSeason) || a.label.localeCompare(b.label));
         for (const t of tracks) {
@@ -434,12 +566,39 @@
             const hl = (d.holidays.find(x => x.name === t.holiday) || {}).label || '';
             main.appendChild(el('div', 'd', `${hl}${t.holiday ? ' · ' + (t.inSeason ? T('ui_in_season') : T('ui_off_season')) : ''} · ${t.bpm} bpm · ${t.duration}s`));
             it.appendChild(main);
+            if (F.scored.includes(t.name) && S.show.fwMode !== 'off') main.lastChild.textContent += ` · ${T('ui_fw_count')}`;
+            const rh = el('button', 'btn small', T('ui_fw_rehearse')); rh.title = T('ui_fw_rehearse_help');
+            rh.addEventListener('click', () => post('rehearse', { track: t.name, show: S.show.show, fw: fwSend() }));
+            const cd = el('button', 'btn small', T('ui_fw_countdown'));
+            cd.addEventListener('click', () => { S.countdown.track = t.name; S.countdown.open = true; render(); });
             const b = el('button', 'btn small primary', T('ui_play'));
-            b.addEventListener('click', () => post('startShow', { track: t.name, show: S.show.show }));
-            it.appendChild(b);
+            b.addEventListener('click', () => post('startShow', { track: t.name, show: S.show.show, fw: fwSend() }));
+            it.appendChild(rh); it.appendChild(cd); it.appendChild(b);
             list.appendChild(it);
+            if (S.countdown.open && S.countdown.track === t.name) {
+                // A countdown to this track: seconds, a time of day, or midnight.
+                const cbx = el('div', 'item active wrap');
+                const cm = el('div', 'main');
+                cm.appendChild(el('div', 't', `${T('ui_fw_countdown')}: ${t.label}`));
+                cm.appendChild(el('div', 'd', T('ui_fw_countdown_help')));
+                cbx.appendChild(cm);
+                const inp = el('input', 'input'); inp.type = 'text'; inp.value = S.countdown.target; inp.style.width = '110px';
+                inp.addEventListener('input', () => { S.countdown.target = inp.value.trim(); });
+                cbx.appendChild(inp);
+                for (const q of ['10', '30', '60', 'midnight']) {
+                    const qb = el('button', 'btn small', q === 'midnight' ? '00:00' : q + 's');
+                    qb.addEventListener('click', () => { S.countdown.target = q; inp.value = q; });
+                    cbx.appendChild(qb);
+                }
+                const go = el('button', 'btn small primary', T('ui_fw_countdown_start'));
+                go.addEventListener('click', () => { post('countdown', { target: S.countdown.target, track: t.name, show: S.show.show, fw: fwSend() }); S.countdown.open = false; render(); });
+                const x = el('button', 'btn small', '×'); x.addEventListener('click', () => { S.countdown.open = false; render(); });
+                cbx.appendChild(go); cbx.appendChild(x);
+                list.appendChild(cbx);
+            }
         }
         labeled(body, T('ui_track')).appendChild(list);
+        if (F.enabled && F.manual && F.here) launchBoard(body);
     }
 
     // ---- Edit ----
@@ -474,7 +633,7 @@
             const it = el('div', 'item' + (g.name === d.settings.group ? ' active' : ''));
             const main = el('div', 'main');
             main.appendChild(el('div', 't', g.name));
-            main.appendChild(el('div', 'd', `${g.props} ${T('ui_props')} · ${g.lights} ${T('ui_lights')} · ${g.dist} m${g.running ? ` · ${T('ui_group_show_on')}` : ''}`));
+            main.appendChild(el('div', 'd', `${g.props} ${T('ui_props')} · ${g.lights} ${T('ui_lights')}${g.launchers ? ` · ${g.launchers} ${T('ui_tab_fireworks').toLowerCase()}` : ''} · ${g.dist} m${g.running ? ` · ${T('ui_group_show_on')}` : ''}`));
             it.appendChild(main);
             const use = el('button', 'btn small', T('ui_group_use')); use.disabled = g.name === d.settings.group;
             use.addEventListener('click', () => setGroup(g.name));
@@ -509,10 +668,41 @@
                 sel.addEventListener('change', () => post('regroup', { id: n.id, group: sel.value }));
                 it.appendChild(sel);
             }
+            if (n.fw) {
+                main.lastChild.textContent += ` · ${T('fw_load_' + n.fw.load)} · ${T('ui_channel')} ${n.fw.channel}${n.fw.hidden ? ' · ' + T('ui_fw_hidden') : ''}`;
+                const test = el('button', 'btn small', T('ui_fw_test')); test.addEventListener('click', () => post('testLauncher', { id: n.id }));
+                it.appendChild(test);
+                if (editable) {
+                    const set = el('button', 'btn small', T('ui_fw_save') + '…');
+                    set.addEventListener('click', () => { S.editing = S.editing === n.id ? null : n.id; renderNearby(list, nearby); });
+                    it.appendChild(set);
+                }
+            }
             const mv = el('button', 'btn small', T('ui_move')); mv.disabled = !editable; mv.addEventListener('click', () => post('move', { id: n.id }));
             const rm = el('button', 'btn small danger', T('ui_remove')); rm.disabled = !editable; rm.addEventListener('click', () => post('remove', { id: n.id }));
             it.appendChild(mv); it.appendChild(rm);
             list.appendChild(it);
+            if (n.fw && S.editing === n.id) {
+                // A placed launcher's settings, edited in place.
+                const h = S.data.holidays.find(x => x.name === n.holiday);
+                const rack = h && (h.launchers || []).find(r => r.name === n.rack);
+                if (h && rack) {
+                    const st = Object.assign({}, n.fw, { palette: n.fw.palette || null });
+                    const ed = el('div', 'item editor wrap');
+                    const inner = el('div', 'main');
+                    const redraw = () => { inner.innerHTML = ''; launcherSettings(inner, h, rack, st, redraw); };
+                    redraw();
+                    ed.appendChild(inner);
+                    const save = el('button', 'btn small primary', T('ui_save'));
+                    save.addEventListener('click', () => {
+                        post('restyle', { id: n.id, changes: { fw: { load: st.load, palette: st.palette || false, channel: st.channel, lift: st.lift, tilt: st.tilt, hidden: !!st.hidden } } });
+                        S.editing = null;
+                        setTimeout(() => post('refreshNearby'), 400);
+                    });
+                    ed.appendChild(save);
+                    list.appendChild(ed);
+                }
+            }
         }
     }
 
@@ -714,8 +904,22 @@
             pv.addEventListener('click', () => { d.settings.preview = !(d.settings.preview !== false); post('setPreview', { preview: d.settings.preview }); render(); });
             kv.appendChild(pv);
         }
+        // Fireworks, for this player only.
+        kv.appendChild(el('span', '', T('ui_fw_mine')));
+        const fo = el('button', 'switch'); fo.setAttribute('role', 'switch'); fo.setAttribute('aria-checked', !d.settings.fwOff);
+        fo.addEventListener('click', () => { d.settings.fwOff = !d.settings.fwOff; post('setFw', { off: d.settings.fwOff }); render(); });
+        kv.appendChild(fo);
+        kv.appendChild(el('span', '', `${T('ui_fw_volume')}: ${Math.round((d.settings.fwVolume ?? 1) * 100)}%`));
+        const fv = el('input'); fv.type = 'range'; fv.min = 0; fv.max = 1; fv.step = 0.05; fv.value = d.settings.fwVolume ?? 1;
+        fv.addEventListener('change', () => { d.settings.fwVolume = parseFloat(fv.value); post('setFw', { volume: d.settings.fwVolume }); render(); });
+        kv.appendChild(fv);
+        kv.appendChild(el('span', '', T('ui_fw_calm')));
+        const fc = el('button', 'switch'); fc.setAttribute('role', 'switch'); fc.setAttribute('aria-checked', !!d.settings.fwCalm); fc.title = T('ui_fw_calm_help');
+        fc.addEventListener('click', () => { d.settings.fwCalm = !d.settings.fwCalm; post('setFw', { calm: d.settings.fwCalm }); render(); });
+        kv.appendChild(fc);
         mine.appendChild(kv);
         mine.appendChild(el('div', 'note', T('ui_view_time_help')));
+        mine.appendChild(el('div', 'note', T('ui_fw_calm_help')));
         if (d.who.decorator || d.who.admin) mine.appendChild(el('div', 'note', T('ui_preview_help')));
 
         const srv = labeled(body, T('ui_server_settings'));
@@ -865,6 +1069,7 @@
         const se = labeled(root, T('ui_shows_editor'));
         const shows = JSON.parse(JSON.stringify(snap.doc.shows || {}));
         const PAT = ['on', 'off', 'twinkle', 'chase', 'alternate', 'fade', 'wave', 'flicker'];
+        const FWP = (S.data && S.data.fireworks && S.data.fireworks.stepPatterns) || ['none'];
         const showsBox = el('div', 'list');
         function drawShows() {
             showsBox.innerHTML = '';
@@ -880,7 +1085,7 @@
                 it.appendChild(head);
                 if (custom) {
                     const tbl = el('table', 'grid');
-                    tbl.innerHTML = `<tr><th>${T('ui_beats')}</th><th>1</th><th>2</th><th>3</th><th>4</th><th></th></tr>`;
+                    tbl.innerHTML = `<tr><th>${T('ui_beats')}</th><th>1</th><th>2</th><th>3</th><th>4</th><th>${T('ui_fw_steps')} 1</th><th>2</th><th>3</th><th>4</th><th></th></tr>`;
                     s.steps.forEach((step, i) => {
                         const tr = el('tr');
                         const beats = el('input'); beats.type = 'number'; beats.step = 0.25; beats.value = step.beats;
@@ -889,6 +1094,13 @@
                         for (let c = 0; c < 4; c++) {
                             const sel = el('select'); for (const p of PAT) { const op = el('option', '', T('pattern_' + p)); op.value = p; if (step.ch[c] === p) op.selected = true; sel.appendChild(op); }
                             sel.addEventListener('change', () => { step.ch[c] = sel.value; pending.shows = shows; });
+                            const td = el('td'); td.appendChild(sel); tr.appendChild(td);
+                        }
+                        // The fireworks each channel fires over the step.
+                        for (let c = 0; c < 4; c++) {
+                            const fwv = (step.fw && step.fw[c]) || 'none';
+                            const sel = el('select'); for (const p of FWP) { const op = el('option', '', T('fw_step_' + p)); op.value = p; if (fwv === p) op.selected = true; sel.appendChild(op); }
+                            sel.addEventListener('change', () => { step.fw = step.fw || ['none', 'none', 'none', 'none']; step.fw[c] = sel.value; pending.shows = shows; });
                             const td = el('td'); td.appendChild(sel); tr.appendChild(td);
                         }
                         const del = el('button', 'btn small danger', '×'); del.addEventListener('click', () => { s.steps.splice(i, 1); pending.shows = shows; drawShows(); });
@@ -935,6 +1147,21 @@
         const t = k => T(k);
         if (mode === 'pick') {
             renderPickTray(hint, row, st);
+        } else if (mode === 'launch') {
+            // Launch mode: the keys fire, the buttons do the same.
+            hint.textContent = `${t('ui_fw_board')}: ${st.group} · ${t('ui_tray_hint_launch')}`;
+            const fire = (action, channel) => { const b = el('button', 'btn small', `${t('ui_fw_' + action)}${channel ? ' ' + channel : ''}`); b.addEventListener('click', () => post('launchAction', { action: 'fire', value: { action, channel: channel || 0 } })); return b; };
+            for (let c = 1; c <= 4; c++) {
+                const g = el('div', 'group'); g.appendChild(el('span', 'label', `${c} · ${st.counts[c - 1]}`));
+                const a = fire('shell', c); a.disabled = !st.counts[c - 1]; g.appendChild(a);
+                const b = fire('salvo', c); b.disabled = !st.counts[c - 1]; g.appendChild(b);
+                row.appendChild(g);
+            }
+            for (const a of ['sweep', 'cake', 'fountain', 'shape']) row.appendChild(fire(a));
+            const fin = fire('finale'); fin.classList.add('danger'); row.appendChild(fin);
+            const leave = el('button', 'btn small danger', t('ui_tray_leave_launch'));
+            leave.addEventListener('click', () => post('launchAction', { action: 'leave' }));
+            row.appendChild(leave);
         } else if (mode === 'prop') {
             hint.textContent = `${st.moving ? 'Moving' : 'Placing'}: ${st.label}  ·  ${t(st.shape ? 'ui_tray_hint_shape' : 'ui_tray_hint_prop')}`;
             const g = el('div', 'group');
@@ -957,7 +1184,9 @@
             if (!st.wall) row.appendChild(trayBtn((st.snap ? '✓ ' : '') + 'Snap to ground', 'snap'));
             row.appendChild(trayBtn((st.pinned ? '✓ ' : '') + t('ui_pinned'), 'pin'));
             row.appendChild(trayBtn((st.align ? '✓ ' : '') + t('ui_align'), 'align'));
+            if (st.canHang) row.appendChild(trayBtn((st.hang ? '✓ ' : '') + t('ui_hang'), 'hang'));
             row.appendChild(trayBtn((st.repeat ? '✓ ' : '') + t('ui_repeat'), 'repeat'));
+            if (st.hanging) row.appendChild(el('span', 'stat', t('ui_hanging')));
             if (st.aligned) { const s = el('span', 'stat'); s.innerHTML = `${t('ui_aligned')} <b>${st.aligned}</b>`; row.appendChild(s); }
             if (st.count) row.appendChild(el('span', 'stat', `${st.count} ${t('ui_placed')}`));
             row.appendChild(trayBtn(t('ui_tray_place'), 'place', null, 'primary'));
@@ -1000,9 +1229,12 @@
             }
             if (isFig) {
                 const g = el('div', 'group'); g.appendChild(trayBtn('-', 'size', parseFloat(st.size) - 0.2)); g.appendChild(el('span', 'stat', `${st.size} m`)); g.appendChild(trayBtn('+', 'size', parseFloat(st.size) + 0.2)); row.appendChild(g);
+                const gz = el('div', 'group'); gz.appendChild(el('span', 'label', t('ui_raise'))); gz.appendChild(trayBtn('↑', 'raise', 0.05)); gz.appendChild(el('span', 'stat', `${st.z} m`)); gz.appendChild(trayBtn('↓', 'raise', -0.05)); row.appendChild(gz);
                 row.appendChild(trayBtn((st.pinned ? '✓ ' : '') + t('ui_pinned'), 'pin'));
                 row.appendChild(trayBtn((st.align ? '✓ ' : '') + t('ui_align'), 'align'));
+                row.appendChild(trayBtn((st.hang ? '✓ ' : '') + t('ui_hang'), 'hang'));
                 row.appendChild(trayBtn((st.repeat ? '✓ ' : '') + t('ui_repeat'), 'repeat'));
+                if (st.hanging) row.appendChild(el('span', 'stat', t('ui_hanging')));
                 if (st.aligned) { const s = el('span', 'stat'); s.innerHTML = `${t('ui_aligned')} <b>${st.aligned}</b>`; row.appendChild(s); }
                 if (st.count) row.appendChild(el('span', 'stat', `${st.count} ${t('ui_placed')}`));
                 row.appendChild(trayBtn(t('ui_tray_place'), 'place', null, 'primary'));
@@ -1036,7 +1268,7 @@
             return;
         }
         const who = el('span', 'stat');
-        who.innerHTML = `<b>${tg.label}</b>${tg.inflatable ? ` (${tg.down ? t('ui_down') : t('ui_up')})` : ''} · ${tg.holiday} · ${t('ui_group')} <b>${tg.group}</b> · ${t('ui_by')} ${tg.by} · ${tg.dist} m`;
+        who.innerHTML = `<b>${tg.label}</b> · ${tg.holiday} · ${t('ui_group')} <b>${tg.group}</b> · ${t('ui_by')} ${tg.by} · ${tg.dist} m`;
         row.appendChild(who);
         if (!st.chosen) {
             row.appendChild(el('span', 'stat', tg.editable ? (tg.strands > 1 && st.strand ? `${t('ui_pick_click')} · ${t('ui_pick_strand_hint')}` : t('ui_pick_click')) : t('ui_pick_locked')));
@@ -1047,8 +1279,8 @@
             row.appendChild(el('span', 'stat', t('ui_pick_locked')));
         } else {
             if (tg.strands > 1 && st.strand) row.appendChild(trayBtn(`${t('ui_pick_remove_strand')} (1/${tg.strands})`, 'removeStrand', null, 'danger'));
-            if (tg.inflatable) row.appendChild(trayBtn(tg.down ? t('ui_inflate') : t('ui_deflate'), 'toggle', null, tg.down ? 'primary' : ''));
             row.appendChild(trayBtn(t('ui_remove'), 'remove', null, 'danger'));
+            if (tg.launcher) row.appendChild(trayBtn(t('ui_fw_test'), 'test'));
             row.appendChild(trayBtn((tg.kind === 'lights' && !tg.figure) ? t('ui_pick_edit') : t('ui_move'), 'move', null, 'primary'));
             const grp = el('div', 'group'); grp.appendChild(el('span', 'label', t('ui_pick_group')));
             for (const g of st.groups || []) {
@@ -1113,6 +1345,102 @@
     function stop() { try { player.pause(); } catch (e) {} current = null; player.removeAttribute('src'); player.load(); }
 
     // ------------------------------------------------------------------
+    // Fireworks sounds. Lua works out how loud, which side and how late
+    // (sound travels 343 m/s: a far boom arrives after its flash); this
+    // plays it through WebAudio with a low-pass for distance. Without
+    // WebAudio, a pool of <audio> elements plays it flat.
+    // ------------------------------------------------------------------
+    const SFX = {};
+    let ctx = null, sfxPool = [], voices = 0;
+    function audioCtx() {
+        if (ctx) return ctx;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        try { ctx = new AC(); } catch (e) { ctx = null; }
+        return ctx;
+    }
+    function sfxBuffer(name) {
+        const c = audioCtx();
+        if (!c) return null;
+        if (SFX[name]) return SFX[name];
+        SFX[name] = fetch(`../audio/sfx/${name}.ogg`).then(r => r.arrayBuffer()).then(b => c.decodeAudioData(b)).catch(() => null);
+        return SFX[name];
+    }
+    function playSfx(d) {
+        const c = audioCtx();
+        if (c && c.state === 'suspended') c.resume().catch(() => {});
+        if (c && c.state !== 'closed') {
+            if (voices >= 24) return;
+            const p = sfxBuffer(d.name);
+            if (!p) return;
+            p.then(buf => {
+                if (!buf) return;
+                voices++;
+                const src = c.createBufferSource(); src.buffer = buf;
+                src.playbackRate.value = 0.94 + Math.random() * 0.12;
+                const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.max(400, Math.min(20000, d.cutoff || 16000));
+                const g = c.createGain(); g.gain.value = Math.max(0, Math.min(1.5, d.gain || 0));
+                let node = src.connect(lp).connect(g);
+                if (c.createStereoPanner) { const pn = c.createStereoPanner(); pn.pan.value = Math.max(-1, Math.min(1, d.pan || 0)); node = node.connect(pn); }
+                node.connect(c.destination);
+                src.onended = () => { voices--; };
+                src.start(c.currentTime + Math.max(0, d.delay || 0));
+            });
+            return;
+        }
+        // The flat fallback.
+        setTimeout(() => {
+            let a = sfxPool.find(x => x.paused || x.ended);
+            if (!a) { if (sfxPool.length >= 12) return; a = new Audio(); sfxPool.push(a); }
+            a.src = `../audio/sfx/${d.name}.ogg`; a.volume = Math.max(0, Math.min(1, d.gain || 0));
+            a.play().catch(() => {});
+        }, Math.max(0, (d.delay || 0) * 1000));
+    }
+
+    // The countdown: the clock runs here, from the moment Lua said how
+    // long was left; Lua says whether this player is near enough to see it.
+    const CD = {};
+    let cdTimer = null;
+    function cdTick() {
+        const box = $('countdown');
+        const now = performance.now();
+        let shown = null;
+        for (const [g, c] of Object.entries(CD)) {
+            const left = c.endsAt - now;
+            if (left < -7000) { delete CD[g]; continue; }
+            if (c.near && (!shown || c.endsAt < shown.endsAt)) shown = c;
+        }
+        if (!shown) { box.classList.add('hidden'); if (!Object.keys(CD).length) { clearInterval(cdTimer); cdTimer = null; } return; }
+        box.classList.remove('hidden');
+        const left = shown.endsAt - now;
+        const secs = Math.ceil(left / 1000);
+        if (left <= 0) {
+            box.className = 'countdown banner';
+            $('cd-num').textContent = shown.banner;
+            if (!shown.chimed) { shown.chimed = true; playSfx({ name: 'chime', gain: 0.8, pan: 0, delay: 0, cutoff: 18000 }); }
+        } else if (secs <= 10) {
+            box.className = 'countdown big';
+            $('cd-num').textContent = String(secs);
+            if (shown.lastTick !== secs) { shown.lastTick = secs; playSfx({ name: 'tick', gain: secs <= 3 ? 0.9 : 0.6, pan: 0, delay: 0, cutoff: 18000 }); }
+        } else {
+            box.className = 'countdown small';
+            const h = Math.floor(secs / 3600), m = Math.floor(secs % 3600 / 60), s2 = secs % 60;
+            $('cd-num').textContent = (h ? `${h}:${String(m).padStart(2, '0')}` : `${m}`) + `:${String(s2).padStart(2, '0')}`;
+        }
+        $('cd-label').textContent = shown.label;
+    }
+    function countdown(d) {
+        if (d.cancel) {
+            if (d.group) delete CD[d.group]; else for (const k of Object.keys(CD)) delete CD[k];
+            cdTick();
+            return;
+        }
+        CD[d.group] = { endsAt: performance.now() + (d.remaining || 0), banner: d.banner, label: d.label, near: !!(CD[d.group] && CD[d.group].near) || !!d.near };
+        if (!cdTimer) cdTimer = setInterval(cdTick, 100);
+        cdTick();
+    }
+
+    // ------------------------------------------------------------------
     // Messages from Lua
     // ------------------------------------------------------------------
     window.addEventListener('message', ev => {
@@ -1137,7 +1465,14 @@
                     const lg = $('live-groups'); if (lg && d.groups) renderLiveGroups(lg, d.groups);
                 }
                 break;
-            case 'nowPlaying': if (S.data) { S.data.nowPlaying = d.nowPlaying; if (d.group) S.data.settings.group = d.group; if (S.tab === 'shows') render(); } break;
+            case 'nowPlaying':
+                if (S.data) {
+                    S.data.nowPlaying = d.nowPlaying;
+                    if (d.group) S.data.settings.group = d.group;
+                    if (d.fwCounts) { S.data.fireworks.here = d.fwHere; S.data.fireworks.counts = d.fwCounts; }
+                    if (S.tab === 'shows' || S.tab === 'fireworks') render();
+                }
+                break;
             case 'settings': S.settings = d.data; if (S.tab === 'settings') render(); break;
             case 'viewTime': if (S.data) { S.data.settings.viewTime = d.viewTime || null; } break;
             case 'tray':
@@ -1151,6 +1486,9 @@
             case 'tips': showTips(d); break;
             case 'hideTips': $('tips').classList.add('hidden'); break;
             case 'thumb': cropThumb(d.model, d.data); break;
+            case 'sfx': playSfx(d); break;
+            case 'countdown': countdown(d); break;
+            case 'countdownNear': if (CD[d.group]) { CD[d.group].near = !!d.near; cdTick(); } break;
         }
     });
 

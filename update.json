@@ -1,20 +1,21 @@
 {
-  "version": "1.0.0",
-  "published": "2026-11-04",
+  "version": "1.2.5",
+  "published": "2026-11-06",
   "changelog": [
-    "**Every inflatable is now a real game model.** All seventy (the sixty-one figures and nine walkway arches) ship in `stream/` as fused one-skin drawables with an emissive shader, a point light and sphere collision, generated from the same shapes that used to be drawn per frame (`tools/build-inflatables.py` \u2192 Blender/Sollumz \u2192 `tools/cwconv`). They cast shadows, take the game's lighting, and you bump into them. The Inflatables tab now places the model and shows its picture; each comes in the one size on its card. The catalog lists them from the generated `shared/inflatable_models.lua`, so only models actually present in `stream/` are offered. Download size grows by about 37 MB.",
-    "Inflatables placed with earlier versions are still drawn the old way and still inflate, deflate and sway; the Edit tray still toggles them.",
-    "Walkway arch models align their rows along the path, like the drawn arches did.",
-    "**Inflatable models are solid** (Settings -> Inflatables and wreaths): on, players and vehicles bump into them; off, everything passes through, for a server whose doorways and walks keep getting blocked. Applies to every client at once.",
-    "**Clear every decoration on the server** (Locations tab, admins): one armed control takes down every location and holiday at once, same as `/holiday clear all`. Saved layouts are kept, and the server writes `data/decorations.json.before-clear-<time>` first so a wrong click can be undone.",
-    "Pictures for the seventy models ship rendered from their shapes; `/holiday thumbs` replaces them with in-game photographs as before.",
-    "`publish-release.ps1` (vendor): hand it the escrowed zip from Keymaster and it checks the escrow, writes `update.json`, commits, tags, pushes and attaches the zip to a GitHub Release."
+    "**Clean colors on every inflatable.** Where two colors met (a beard and a coat, a sack and a sleigh) the models showed thin stripes of unrelated colors, gold and white, in stair steps. Every model is rebuilt with each color cut cleanly along a smooth line.",
+    "**Trims are printed on, not stuck on.** Belts, coat stripes and hems, Mrs. Claus's apron, the nutcracker's braid, the pilgrim's collar, the worker's reflective stripes, the graduate's stole, the jester's collar, the egg's bands, Uncle Sam's stripes, the firecracker's bands and the grill's band were thin discs that stood off the body like plates. They are now part of the surface.",
+    "**Santa in his sleigh, redesigned.** He sits side-on to the street, facing it and waving, with his sack behind him; the sleigh has a tall curled prow, a backrest, and two runners on the ground that curl up at the front and join the sleigh. (He used to look at the prow, and the runners were loose rods that read as yellow plates on the ground.)",
+    "**The eagle's wings** grow from its shoulders and sweep up; they used to only touch the body and showed gaps.",
+    "Same model names: everything already placed updates in place, nothing to do on a server.",
+    "**The strings in front of you stay whole and keep their glow on a fully lit house.** The per-frame share of bulbs counted every string within 10 m of its CENTER as equally far, so a long string beside you counted as far and the strands right in front of you thinned and lost their halos. Shares now go by each string's nearest bulb, and the glow leans harder still to the strings close to you.",
+    "**Distant bulbs cost half.** Past 25 m (`Lights.FarCoreDistance`) a bulb is one diamond instead of two, so a big display keeps more of its bulbs.",
+    "**No bare diamonds.** A bulb that does not get a textured halo this frame draws a wider, softer under-glow instead of a hard diamond."
   ],
   "files": [
     {
       "path": "CHANGELOG.md",
-      "size": 22394,
-      "crc32": "eb79ecfd"
+      "size": 31918,
+      "crc32": "371c3c86"
     },
     {
       "path": "LICENSE",
@@ -23,13 +24,13 @@
     },
     {
       "path": "README.md",
-      "size": 24892,
-      "crc32": "69b5deaf"
+      "size": 31768,
+      "crc32": "8ccdc04e"
     },
     {
       "path": "fxmanifest.lua",
-      "size": 4334,
-      "crc32": "455b0799"
+      "size": 4927,
+      "crc32": "fc54f21c"
     },
     {
       "path": "audio/amazing_grace.ogg",
@@ -207,44 +208,109 @@
       "crc32": "a6cd6f9d"
     },
     {
+      "path": "audio/sfx/boom.ogg",
+      "size": 24973,
+      "crc32": "114d1355"
+    },
+    {
+      "path": "audio/sfx/boom_big.ogg",
+      "size": 32153,
+      "crc32": "cc56c504"
+    },
+    {
+      "path": "audio/sfx/boom_soft.ogg",
+      "size": 26913,
+      "crc32": "cbe449ad"
+    },
+    {
+      "path": "audio/sfx/chime.ogg",
+      "size": 16177,
+      "crc32": "f5dc1cda"
+    },
+    {
+      "path": "audio/sfx/crackle.ogg",
+      "size": 9422,
+      "crc32": "5e4ef978"
+    },
+    {
+      "path": "audio/sfx/fountain.ogg",
+      "size": 34136,
+      "crc32": "c6e8f846"
+    },
+    {
+      "path": "audio/sfx/launch.ogg",
+      "size": 9061,
+      "crc32": "a125617d"
+    },
+    {
+      "path": "audio/sfx/pop.ogg",
+      "size": 11635,
+      "crc32": "557c8a69"
+    },
+    {
+      "path": "audio/sfx/rocket.ogg",
+      "size": 17357,
+      "crc32": "eb634d6c"
+    },
+    {
+      "path": "audio/sfx/salute.ogg",
+      "size": 18126,
+      "crc32": "27dd3af4"
+    },
+    {
+      "path": "audio/sfx/tick.ogg",
+      "size": 4283,
+      "crc32": "2716483d"
+    },
+    {
+      "path": "audio/sfx/whistle.ogg",
+      "size": 20464,
+      "crc32": "9f548f94"
+    },
+    {
+      "path": "client/fireworks.lua",
+      "size": 32687,
+      "crc32": "3f62b4d2"
+    },
+    {
       "path": "client/framework.lua",
       "size": 2659,
-      "crc32": "2dcc4ee7"
+      "crc32": "9af7311b"
     },
     {
       "path": "client/lights.lua",
-      "size": 15158,
-      "crc32": "e97a3409"
+      "size": 18328,
+      "crc32": "53f437e6"
     },
     {
       "path": "client/main.lua",
-      "size": 10303,
-      "crc32": "65b8e3f4"
+      "size": 10672,
+      "crc32": "33adfbda"
     },
     {
       "path": "client/placer.lua",
-      "size": 45433,
-      "crc32": "6369ea70"
+      "size": 48764,
+      "crc32": "b27deb97"
     },
     {
       "path": "client/shapes.lua",
-      "size": 13126,
-      "crc32": "694536dc"
+      "size": 10005,
+      "crc32": "f3799a14"
     },
     {
       "path": "client/show.lua",
-      "size": 3713,
-      "crc32": "3e6c39f2"
+      "size": 4721,
+      "crc32": "c26f1889"
     },
     {
       "path": "client/thumbs.lua",
       "size": 4228,
-      "crc32": "80bfbd2e"
+      "crc32": "141c6a04"
     },
     {
       "path": "client/ui.lua",
-      "size": 26357,
-      "crc32": "7a88d114"
+      "size": 34428,
+      "crc32": "55ddf4d1"
     },
     {
       "path": "html/bulb.png",
@@ -253,18 +319,18 @@
     },
     {
       "path": "html/index.html",
-      "size": 1665,
-      "crc32": "7dfbfddd"
+      "size": 1906,
+      "crc32": "964aa574"
     },
     {
       "path": "html/script.js",
-      "size": 74032,
-      "crc32": "0170d333"
+      "size": 96271,
+      "crc32": "7f2aead8"
     },
     {
       "path": "html/style.css",
-      "size": 12073,
-      "crc32": "dacb45f2"
+      "size": 14931,
+      "crc32": "7abc950c"
     },
     {
       "path": "html/thumbs/apa_mp_h_acc_candles_01.jpg",
@@ -1073,8 +1139,8 @@
     },
     {
       "path": "locales/en.lua",
-      "size": 34787,
-      "crc32": "5c7c33e1"
+      "size": 44904,
+      "crc32": "3f5fe1ee"
     },
     {
       "path": "locales/init.lua",
@@ -1088,28 +1154,28 @@
     },
     {
       "path": "server/main.lua",
-      "size": 25711,
-      "crc32": "f4882159"
+      "size": 32104,
+      "crc32": "69d67beb"
     },
     {
       "path": "server/ratelimit.lua",
       "size": 1205,
-      "crc32": "f6b39992"
+      "crc32": "686f6048"
     },
     {
       "path": "server/store.lua",
-      "size": 15185,
-      "crc32": "05c49d96"
+      "size": 15996,
+      "crc32": "6f3edcc0"
     },
     {
       "path": "server/update.lua",
       "size": 7324,
-      "crc32": "b1092d11"
+      "crc32": "6519e842"
     },
     {
       "path": "shared/defaults.lua",
-      "size": 26589,
-      "crc32": "7611868e"
+      "size": 31631,
+      "crc32": "ab91d3ea"
     },
     {
       "path": "shared/figures.lua",
@@ -1117,9 +1183,19 @@
       "crc32": "2d3fbaac"
     },
     {
+      "path": "shared/fireworks.lua",
+      "size": 23437,
+      "crc32": "5e3ddbc7"
+    },
+    {
+      "path": "shared/fireworks_scores.lua",
+      "size": 136473,
+      "crc32": "fd4f90c3"
+    },
+    {
       "path": "shared/holidays.lua",
-      "size": 45735,
-      "crc32": "5ea421c7"
+      "size": 46524,
+      "crc32": "05aa7861"
     },
     {
       "path": "shared/inflatable_models.lua",
@@ -1129,372 +1205,372 @@
     {
       "path": "shared/settings.lua",
       "size": 2993,
-      "crc32": "2e714280"
+      "crc32": "a24d4a17"
     },
     {
       "path": "shared/shapes.lua",
-      "size": 114885,
-      "crc32": "e3498ebf"
+      "size": 32369,
+      "crc32": "e69b35e3"
     },
     {
       "path": "shared/util.lua",
       "size": 3057,
-      "crc32": "385ed976"
+      "crc32": "a7c81cb3"
     },
     {
       "path": "stream/sk_infl_acorn_16.ydr",
-      "size": 601512,
-      "crc32": "c3049530"
+      "size": 770613,
+      "crc32": "0046c871"
     },
     {
       "path": "stream/sk_infl_arch_balloon_26.ydr",
-      "size": 1146818,
-      "crc32": "e4b8f548"
+      "size": 2579725,
+      "crc32": "8af0cbab"
     },
     {
       "path": "stream/sk_infl_arch_candy_26.ydr",
-      "size": 713351,
-      "crc32": "d620778b"
+      "size": 1729295,
+      "crc32": "9ba003eb"
     },
     {
       "path": "stream/sk_infl_arch_fireworks_26.ydr",
-      "size": 735191,
-      "crc32": "12036a7d"
+      "size": 1752527,
+      "crc32": "a58d9333"
     },
     {
       "path": "stream/sk_infl_arch_holidays_26.ydr",
-      "size": 819847,
-      "crc32": "fffbe2d1"
+      "size": 2241308,
+      "crc32": "5c9b9db9"
     },
     {
       "path": "stream/sk_infl_arch_kwanzaa_26.ydr",
-      "size": 713357,
-      "crc32": "1339f1ff"
+      "size": 1729193,
+      "crc32": "5ec01d35"
     },
     {
       "path": "stream/sk_infl_arch_rainbow_24.ydr",
-      "size": 1592608,
-      "crc32": "394894da"
+      "size": 3737989,
+      "crc32": "f9202e0a"
     },
     {
       "path": "stream/sk_infl_arch_tophat_28.ydr",
-      "size": 727544,
-      "crc32": "885196d0"
+      "size": 1731377,
+      "crc32": "a4439725"
     },
     {
       "path": "stream/sk_infl_arch_wedding_26.ydr",
-      "size": 753818,
-      "crc32": "63b23fe7"
+      "size": 2110473,
+      "crc32": "1e1fa944"
     },
     {
       "path": "stream/sk_infl_balloons_22.ydr",
-      "size": 636699,
-      "crc32": "05084f7b"
+      "size": 973691,
+      "crc32": "81a01c09"
     },
     {
       "path": "stream/sk_infl_bat_16.ydr",
-      "size": 543424,
-      "crc32": "21505437"
+      "size": 842695,
+      "crc32": "353bbcbb"
     },
     {
       "path": "stream/sk_infl_blackcat_18.ydr",
-      "size": 591242,
-      "crc32": "6e38284b"
+      "size": 746742,
+      "crc32": "062b9a97"
     },
     {
       "path": "stream/sk_infl_bridegroom_24.ydr",
-      "size": 1431831,
-      "crc32": "358cdbeb"
+      "size": 1841374,
+      "crc32": "1032020d"
     },
     {
       "path": "stream/sk_infl_bunny_22.ydr",
-      "size": 771045,
-      "crc32": "f0e3a637"
+      "size": 1237497,
+      "crc32": "fe0919cd"
     },
     {
       "path": "stream/sk_infl_cake_20.ydr",
-      "size": 1192494,
-      "crc32": "95b15b40"
+      "size": 1742344,
+      "crc32": "06b38795"
     },
     {
       "path": "stream/sk_infl_candycane_28.ydr",
-      "size": 471437,
-      "crc32": "fe5f932f"
+      "size": 1328603,
+      "crc32": "e74146c4"
     },
     {
       "path": "stream/sk_infl_catpumpkin_20.ydr",
-      "size": 855221,
-      "crc32": "86e03887"
+      "size": 1078722,
+      "crc32": "e1929b22"
     },
     {
       "path": "stream/sk_infl_cauldron_24.ydr",
-      "size": 851177,
-      "crc32": "3bfbbbfe"
+      "size": 1111362,
+      "crc32": "b41000c0"
     },
     {
       "path": "stream/sk_infl_champagne_30.ydr",
-      "size": 599321,
-      "crc32": "35dde67b"
+      "size": 723833,
+      "crc32": "f65d6bca"
     },
     {
       "path": "stream/sk_infl_chick_18.ydr",
-      "size": 602811,
-      "crc32": "2784b7ee"
+      "size": 829115,
+      "crc32": "4c432cbf"
     },
     {
       "path": "stream/sk_infl_cornucopia_14.ydr",
-      "size": 1042503,
-      "crc32": "fccc88a4"
+      "size": 1393975,
+      "crc32": "da44df49"
     },
     {
       "path": "stream/sk_infl_cupid_20.ydr",
-      "size": 930703,
-      "crc32": "31044c6b"
+      "size": 1111469,
+      "crc32": "2ced5be3"
     },
     {
       "path": "stream/sk_infl_discoball_22.ydr",
-      "size": 1344424,
-      "crc32": "42672d71"
+      "size": 1941781,
+      "crc32": "cdd462c3"
     },
     {
       "path": "stream/sk_infl_doves_20.ydr",
-      "size": 725179,
-      "crc32": "dc34cb6b"
+      "size": 1082397,
+      "crc32": "10173ec6"
     },
     {
       "path": "stream/sk_infl_dreidel_18.ydr",
-      "size": 358366,
-      "crc32": "0b9d0a73"
+      "size": 612929,
+      "crc32": "fb963d19"
     },
     {
       "path": "stream/sk_infl_eagle_20.ydr",
-      "size": 1248355,
-      "crc32": "3b27bb7b"
+      "size": 1596904,
+      "crc32": "281f4eb1"
     },
     {
       "path": "stream/sk_infl_egg_18.ydr",
-      "size": 776077,
-      "crc32": "8662be48"
+      "size": 1643914,
+      "crc32": "b4cfae31"
     },
     {
       "path": "stream/sk_infl_elephant_18.ydr",
-      "size": 859383,
-      "crc32": "cad47f74"
+      "size": 1220593,
+      "crc32": "ddc96dc0"
     },
     {
       "path": "stream/sk_infl_firecracker_26.ydr",
-      "size": 666803,
-      "crc32": "b9b61885"
+      "size": 1262683,
+      "crc32": "0922c3b7"
     },
     {
       "path": "stream/sk_infl_gbhouse_22.ydr",
-      "size": 1219269,
-      "crc32": "8272bf40"
+      "size": 1569986,
+      "crc32": "b53e5ab8"
     },
     {
       "path": "stream/sk_infl_ghost_24.ydr",
-      "size": 955413,
-      "crc32": "a0ee5a08"
+      "size": 1241806,
+      "crc32": "0534a0ba"
     },
     {
       "path": "stream/sk_infl_gingerbread_22.ydr",
-      "size": 717187,
-      "crc32": "6ed993c5"
+      "size": 901808,
+      "crc32": "13ae2d93"
     },
     {
       "path": "stream/sk_infl_graduate_24.ydr",
-      "size": 786049,
-      "crc32": "1ffa94ee"
+      "size": 1154968,
+      "crc32": "7fac0e2d"
     },
     {
       "path": "stream/sk_infl_grill_16.ydr",
-      "size": 457126,
-      "crc32": "ade43bc8"
+      "size": 643997,
+      "crc32": "c17441c7"
     },
     {
       "path": "stream/sk_infl_hauntedtree_30.ydr",
-      "size": 971737,
-      "crc32": "db550dfc"
+      "size": 1098178,
+      "crc32": "95e8920a"
     },
     {
       "path": "stream/sk_infl_heart_20.ydr",
-      "size": 841934,
-      "crc32": "90f3f4d0"
+      "size": 1045704,
+      "crc32": "f806bdc9"
     },
     {
       "path": "stream/sk_infl_jackolantern_20.ydr",
-      "size": 1287175,
-      "crc32": "04bbd5d8"
+      "size": 1334558,
+      "crc32": "bd995194"
     },
     {
       "path": "stream/sk_infl_jester_26.ydr",
-      "size": 925514,
-      "crc32": "f1149f3a"
+      "size": 1642271,
+      "crc32": "7a4c7206"
     },
     {
       "path": "stream/sk_infl_kinara_20.ydr",
-      "size": 641686,
-      "crc32": "4cc40183"
+      "size": 834414,
+      "crc32": "f19495fe"
     },
     {
       "path": "stream/sk_infl_leprechaun_24.ydr",
-      "size": 973023,
-      "crc32": "a99c2d93"
+      "size": 1639853,
+      "crc32": "d84ba8ac"
     },
     {
       "path": "stream/sk_infl_lovebear_22.ydr",
-      "size": 1047483,
-      "crc32": "f8db0337"
+      "size": 1471869,
+      "crc32": "01b177c3"
     },
     {
       "path": "stream/sk_infl_menorah_22.ydr",
-      "size": 502462,
-      "crc32": "3ca76471"
+      "size": 747672,
+      "crc32": "84a2b0c1"
     },
     {
       "path": "stream/sk_infl_mrsclaus_24.ydr",
-      "size": 966722,
-      "crc32": "306fd900"
+      "size": 1488557,
+      "crc32": "803eb7f1"
     },
     {
       "path": "stream/sk_infl_nutcracker_28.ydr",
-      "size": 1016785,
-      "crc32": "2b22e860"
+      "size": 1760889,
+      "crc32": "87f85034"
     },
     {
       "path": "stream/sk_infl_partyhat_20.ydr",
-      "size": 873782,
-      "crc32": "91021dcb"
+      "size": 1703905,
+      "crc32": "302c1668"
     },
     {
       "path": "stream/sk_infl_penguin_20.ydr",
-      "size": 595666,
-      "crc32": "4b181661"
+      "size": 845713,
+      "crc32": "254bde94"
     },
     {
       "path": "stream/sk_infl_pilgrim_24.ydr",
-      "size": 854763,
-      "crc32": "5f2ab098"
+      "size": 1539484,
+      "crc32": "d593fbaf"
     },
     {
       "path": "stream/sk_infl_polarbear_18.ydr",
-      "size": 924246,
-      "crc32": "6e775555"
+      "size": 1249983,
+      "crc32": "18c8f46f"
     },
     {
       "path": "stream/sk_infl_presents_20.ydr",
-      "size": 927894,
-      "crc32": "2427db43"
+      "size": 1073797,
+      "crc32": "2321355e"
     },
     {
       "path": "stream/sk_infl_pumpkin_16.ydr",
-      "size": 800366,
-      "crc32": "578af117"
+      "size": 836172,
+      "crc32": "5376c0d4"
     },
     {
       "path": "stream/sk_infl_pumpkinstack_24.ydr",
-      "size": 1041338,
-      "crc32": "81618506"
+      "size": 1120328,
+      "crc32": "94f57f82"
     },
     {
       "path": "stream/sk_infl_reaper_28.ydr",
-      "size": 1054506,
-      "crc32": "e46dcf13"
+      "size": 1236610,
+      "crc32": "7e4f7289"
     },
     {
       "path": "stream/sk_infl_reindeer_24.ydr",
-      "size": 687345,
-      "crc32": "1e705897"
+      "size": 953371,
+      "crc32": "5cf5006c"
     },
     {
       "path": "stream/sk_infl_santa_26.ydr",
-      "size": 945326,
-      "crc32": "e7a74d4e"
+      "size": 1572423,
+      "crc32": "7189913c"
     },
     {
       "path": "stream/sk_infl_santasleigh_22.ydr",
-      "size": 1448869,
-      "crc32": "834ca96f"
+      "size": 2794322,
+      "crc32": "dc7a9b86"
     },
     {
       "path": "stream/sk_infl_scarecrow_26.ydr",
-      "size": 772622,
-      "crc32": "a9dff676"
+      "size": 1390353,
+      "crc32": "26dcef36"
     },
     {
       "path": "stream/sk_infl_shamrock_20.ydr",
-      "size": 592356,
-      "crc32": "6b83cd79"
+      "size": 700513,
+      "crc32": "e2647737"
     },
     {
       "path": "stream/sk_infl_snowfamily_24.ydr",
-      "size": 1485225,
-      "crc32": "28d7b189"
+      "size": 1985904,
+      "crc32": "a3332bd2"
     },
     {
       "path": "stream/sk_infl_snowglobe_24.ydr",
-      "size": 2077206,
-      "crc32": "57074d22"
+      "size": 2174071,
+      "crc32": "a28293ea"
     },
     {
       "path": "stream/sk_infl_snowman_24.ydr",
-      "size": 790346,
-      "crc32": "0ef3d311"
+      "size": 942848,
+      "crc32": "248baea4"
     },
     {
       "path": "stream/sk_infl_spider_16.ydr",
-      "size": 2132799,
-      "crc32": "2f4896cf"
+      "size": 2307911,
+      "crc32": "27563901"
     },
     {
       "path": "stream/sk_infl_star_22.ydr",
-      "size": 505417,
-      "crc32": "7cde372b"
+      "size": 684617,
+      "crc32": "1f83fd5f"
     },
     {
       "path": "stream/sk_infl_toast_20.ydr",
-      "size": 550768,
-      "crc32": "9f193ada"
+      "size": 668071,
+      "crc32": "1d40f9d2"
     },
     {
       "path": "stream/sk_infl_train_18.ydr",
-      "size": 1222464,
-      "crc32": "bc8c89d4"
+      "size": 1536513,
+      "crc32": "56952ce6"
     },
     {
       "path": "stream/sk_infl_tree_30.ydr",
-      "size": 2013626,
-      "crc32": "dae79e20"
+      "size": 2356239,
+      "crc32": "9c9ff212"
     },
     {
       "path": "stream/sk_infl_turkey_24.ydr",
-      "size": 1328427,
-      "crc32": "4ac3e814"
+      "size": 1737537,
+      "crc32": "853a7c13"
     },
     {
       "path": "stream/sk_infl_unclesam_22.ydr",
-      "size": 1105609,
-      "crc32": "76cf551e"
+      "size": 1578555,
+      "crc32": "2fdbd6c6"
     },
     {
       "path": "stream/sk_infl_weddingcake_20.ydr",
-      "size": 1733637,
-      "crc32": "ed936453"
+      "size": 2832656,
+      "crc32": "ebb36281"
     },
     {
       "path": "stream/sk_infl_witch_26.ydr",
-      "size": 914667,
-      "crc32": "f52c1e6e"
+      "size": 1444438,
+      "crc32": "8e020345"
     },
     {
       "path": "stream/sk_infl_worker_24.ydr",
-      "size": 1095263,
-      "crc32": "6e83e6f8"
+      "size": 2010717,
+      "crc32": "b54af02a"
     },
     {
       "path": "stream/sk_inflatables.ytyp",
-      "size": 4243,
-      "crc32": "34e6b06f"
+      "size": 4258,
+      "crc32": "a98145dd"
     }
   ]
 }
