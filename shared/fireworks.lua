@@ -116,6 +116,32 @@ Fireworks.SoundGain = {
     launch = 0.8, whistle = 0.22, rocket = 0.4, fountain = 0.45, tick = 1.0, chime = 1.0,
 }
 
+-- The sounds that are a steady high tone rather than a bang. Outside, a
+-- boom carries across town and a whistle is lost under the traffic a few
+-- hundred meters off; faded over the booms' whole range, a quiet whistle
+-- still stood out a long way from the show. These fade out over
+-- Config.Fireworks.WhistleRange instead, and are the ones the Whistles
+-- switches (server and player) turn into a plain launch thump.
+Fireworks.Whistles = { whistle = true, rocket = true }
+
+-- Colors for shapes that have one of their own: a candy cane is red and
+-- white whatever the launcher is loaded with. `colors` run along the
+-- outline in bands `band` long (in the figure's own units, where it spans
+-- -1..1), or one per stroke with `perStroke` (strokes past the end of the
+-- list take its last color). `width` draws a thin figure
+-- as two parallel lines so it reads as a cane, not a scribble. A shape
+-- not listed here is drawn in the launcher's first color.
+local RED, WHITE, GREEN, GOLDC = { 235, 30, 40 }, { 255, 255, 255 }, { 40, 205, 70 }, { 255, 196, 90 }
+Fireworks.FigureStyle = {
+    candy_cane = { colors = { RED, WHITE }, band = 0.2, width = 0.14 },
+    tree       = { colors = { GREEN, GOLDC }, perStroke = true },
+    snowflake  = { colors = { { 200, 235, 255 } } },
+    bell       = { colors = { GOLDC } },
+    wreath     = { colors = { GREEN, GREEN, RED }, perStroke = true },          -- two rings, then the bow
+    shamrock   = { colors = { GREEN } },
+    pumpkin    = { colors = { { 255, 130, 20 }, GREEN, { 255, 220, 80 } }, perStroke = true }, -- body, stem, face
+}
+
 -- The flash and sparkle at the mouth of a launcher as a shell leaves it.
 Fireworks.Launch = { { WPN, 'muz_indep_firework', 1.0 }, { PROJ, 'scr_indep_launcher_sparkle_spawn', 0.8 } }
 

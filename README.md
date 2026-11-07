@@ -376,8 +376,14 @@ from the keyboard with the panel closed: `1`-`4` a shell from that channel
 for the finale, Backspace to leave.
 
 **For each player.** Settings > My settings: fireworks on or off, their
-volume, and **fewer flashes** (no light from the bursts, no strobes or
-white salutes) for anyone who finds flashing hard to watch.
+volume, **whistles** on or off (off: shells leave with a thump), and
+**fewer flashes** (no light from the bursts, no strobes or white salutes)
+for anyone who finds flashing hard to watch.
+
+**Whistles.** A whistle is a steady high tone and stands out much farther
+than a boom of the same volume, so whistles fade out over their own,
+shorter distance: Settings > Fireworks > **Whistles heard within** (250 m).
+**Whistles** in the same section turns them off for the whole server.
 
 **Checking a game build.** `/holiday fwtest` fires every effect in turn in
 front of you and writes each one's name in F8, with whether its particle
@@ -411,7 +417,7 @@ in season (or the one named) and shows them on a card for 45 seconds.
 | `/holiday stop [group]` | Decorators | Stop the show or the countdown |
 | `/holiday launch` | Decorators | Launch mode: fire from the keyboard |
 | `/holiday fire <shell\|salvo\|sweep\|cake\|fountain\|shape\|finale> [channel]` | Decorators | Fire by hand |
-| `/holiday fireworks on\|off\|calm\|normal\|volume <0-1>` | Anyone | Fireworks, for you only |
+| `/holiday fireworks on\|off\|calm\|normal\|volume <0-1>\|whistle on\|off` | Anyone | Fireworks, for you only |
 | `/holiday fwtest` | Anyone | Every firework effect in front of you, named in F8 |
 | `/holiday tips [holiday]` | Anyone | Decorating tips |
 | `/holiday mute` / `unmute` | Anyone | Holiday music, for you only |

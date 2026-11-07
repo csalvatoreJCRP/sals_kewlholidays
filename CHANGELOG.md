@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.2.7] - 2026-11-07
+
+### Fireworks
+
+- **Whistles no longer carry across the map.** Every firework sound faded
+  out over the same 700 m, and a whistle is a steady high tone that stands
+  out far beyond its volume, so it was heard long after the booms had gone
+  quiet. Whistles (shells and rockets) now fade out over their own
+  distance, 250 m by default.
+- **Whistles can be turned off.** Players: Settings > My settings >
+  **Whistles**, or `/holiday fireworks whistle off`. The whole server:
+  Settings > Fireworks > **Whistles**. With them off, a shell leaves with a
+  launch thump.
+- **Sharper drawn shapes.** The tree, candy cane, snowflake and other shapes
+  drawn in sparks were a blur: the sparks were drawn large with a wide glow,
+  every shape had the same number of them however short its outline (the
+  candy cane was one smear), and their colors alternated spark by spark. Now
+  they are small separate stars spaced along the outline with a faint glow,
+  in one color, or in the shape's own: a red and white striped candy cane, a
+  green tree on a gold trunk, an ice-blue snowflake, a gold bell, a green
+  wreath with a red bow, an orange jack-o'-lantern. The game's own shapes
+  (the star, the heart) are unchanged.
+
+### Config
+
+- New: `Config.Fireworks.Whistles` (default `true`) and
+  `Config.Fireworks.WhistleRange` (default `250.0`). Nothing to change on
+  upgrade.
+
 ## [1.2.6] - 2026-11-07
 
 ### Inflatables: every one of the 70 reviewed and rebuilt

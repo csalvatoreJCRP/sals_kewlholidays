@@ -913,6 +913,10 @@
         const fv = el('input'); fv.type = 'range'; fv.min = 0; fv.max = 1; fv.step = 0.05; fv.value = d.settings.fwVolume ?? 1;
         fv.addEventListener('change', () => { d.settings.fwVolume = parseFloat(fv.value); post('setFw', { volume: d.settings.fwVolume }); render(); });
         kv.appendChild(fv);
+        kv.appendChild(el('span', '', T('ui_fw_whistle')));
+        const fw = el('button', 'switch'); fw.setAttribute('role', 'switch'); fw.setAttribute('aria-checked', d.settings.fwWhistle !== false); fw.title = T('ui_fw_whistle_help');
+        fw.addEventListener('click', () => { d.settings.fwWhistle = d.settings.fwWhistle === false; post('setFw', { whistle: d.settings.fwWhistle }); render(); });
+        kv.appendChild(fw);
         kv.appendChild(el('span', '', T('ui_fw_calm')));
         const fc = el('button', 'switch'); fc.setAttribute('role', 'switch'); fc.setAttribute('aria-checked', !!d.settings.fwCalm); fc.title = T('ui_fw_calm_help');
         fc.addEventListener('click', () => { d.settings.fwCalm = !d.settings.fwCalm; post('setFw', { calm: d.settings.fwCalm }); render(); });

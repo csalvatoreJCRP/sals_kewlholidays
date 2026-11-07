@@ -150,6 +150,8 @@ Config.Fireworks = {
     MaxStars         = 700,      -- drawn sparks per frame (trails, shapes); shares the lights' triangle buffer
     RenderDistance   = 900.0,    -- a show farther than this is not fired on this client
     SoundRange       = 700.0,    -- the booms fade out over this distance
+    Whistles         = true,     -- false: no shell or rocket whistles on this server, just the launch thump
+    WhistleRange     = 250.0,    -- whistles fade out over this distance (a steady tone stood out far too far at the booms' range)
     Volume           = 0.8,      -- ceiling for every firework sound
     SpeedOfSound     = true,     -- the boom of a far shell arrives after its flash, as it does outside
     SkyLights        = true,     -- each burst lights the buildings and the ground in its color
@@ -335,6 +337,8 @@ Schema = {
         { path = 'Fireworks.MaxStars',         type = 'int',    label = 'Drawn sparks per frame', min = 0, max = 3000, help = "Trails and shapes. They share the string lights' triangle buffer, which is held back for them while a show fires." },
         { path = 'Fireworks.RenderDistance',   type = 'number', label = 'Visible within (m)', min = 100, max = 3000 },
         { path = 'Fireworks.SoundRange',       type = 'number', label = 'Heard within (m)', min = 50, max = 3000 },
+        { path = 'Fireworks.Whistles',         type = 'bool',   label = 'Whistles', help = 'Off: shells and rockets leave with a thump and no whistle, for every player. Players can also turn whistles off for themselves in My settings.' },
+        { path = 'Fireworks.WhistleRange',     type = 'number', label = 'Whistles heard within (m)', min = 20, max = 3000, help = 'A whistle is a steady high tone and carries further to the ear than its volume says; it fades out over this distance, not the booms\' range.' },
         { path = 'Fireworks.Volume',           type = 'number', label = 'Volume ceiling (0-1)', min = 0, max = 1 },
         { path = 'Fireworks.SpeedOfSound',     type = 'bool',   label = 'Sound arrives late with distance', help = 'A shell 340 m away is heard a second after it is seen, as outside.' },
         { path = 'Fireworks.SkyLights',        type = 'bool',   label = 'Bursts light up the area' },
