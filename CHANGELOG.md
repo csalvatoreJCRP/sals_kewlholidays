@@ -1,5 +1,54 @@
 # Changelog
 
+## [1.2.6] - 2026-11-07
+
+### Inflatables: every one of the 70 reviewed and rebuilt
+
+- **Nothing is see-through any more.** 1.2.5 shipped every inflatable body
+  inside-out: the game draws only the outside of a surface, so it skipped
+  the near side and showed the far side from within. A bride's hair showed
+  through her face, the elephant's trunk looked hollow, balloons looked like
+  bowls. The builder now winds every surface outward and refuses to write a
+  model that is not.
+- **Boxes and cylinders.** The builder only knew rounded blobs, so anything
+  square or round-sided came out as a lump. It now builds real boxes and
+  cylinders, and these were redesigned with them: the **gingerbread house**
+  (walls, a gable, two icing roof slabs, chimney, door, windows with panes,
+  gumdrops along the eaves), the **stack of presents** (wrapped boxes, ribbon
+  both ways, bows), the **Christmas train** (boiler, stack, cab with windows,
+  cowcatcher, gold wheels, a tender of presents), the **dreidel** (a square
+  body on its point, a handle, a Hebrew letter on each face), the **Uncle Sam
+  hat** (a tall striped crown, starred band, brim), both **cakes** (round
+  tiers with icing and drips), the **champagne toast** (two flutes leaning
+  in), and the **barbecue grill** (kettle on three legs, grate with burgers
+  and hot dogs, lid open behind).
+- **Redesigned to look like the product:** the **black cat** sits up with
+  green eyes, whiskers, a collar and bell and a tail curled round its paws
+  (it was a blob on four paddles); the **cat on the pumpkin** is the same
+  cat; the **haunted tree** is a dark gnarled trunk with roots, a face and
+  branches that bend up and out; the **cornucopia** is a proper horn with a
+  dark mouth and a pile of harvest in front; the **rainbow arch** is six
+  smooth bands (it was rows of beads); the **gold star** has a stand.
+- **Strings and thin parts** (balloon strings, cupid's bow string) no longer
+  come out as dashes.
+- **A quarter of the triangles, the same look.** Every model is simplified
+  after it is built; the `stream` folder went from 51 MB to 22 MB and the
+  download is a third smaller. Same model names: everything already placed
+  updates in place.
+- **The bunny's and the chick's eyes** were inside their heads. Any feature
+  that would be buried in the skin is now moved out to the surface.
+
+### Updater
+
+- **Downloads are retried and paced.** The updater fired every file at once
+  (300 of them) and a server updating from 1.0 lost two to GitHub and gave
+  up with "2 files could not be verified" and no names. Six at a time now,
+  three tries each.
+- **Failures say which files and why**, in game and in the console, whether
+  a download failed (try again), a file did not match the manifest (report
+  it), or a file needs a folder the old version never had (the message
+  names the folder to create; a 1.0 server needs `audio/sfx`).
+
 ## [1.2.5] - 2026-11-06
 
 ### Inflatables

@@ -99,6 +99,7 @@ Locales['en'] = {
     update_error      = 'Update: %{err}',
     update_applying   = 'Downloading the update...',
     update_applied    = 'Update %{version} written (%{count} files). Restart the resource to load it.',
+    update_unplaced   = 'Update: %{written} of %{total} files written. %{count} could not be placed because this folder does not exist yet in the resource: %{folders}. Create it (empty) in the resource folder on the server, then run the update again. Do not restart the resource until it completes.',
     ui_updates        = 'Updates',
     ui_update_check   = 'Check now',
     ui_update_apply   = 'Apply update',
