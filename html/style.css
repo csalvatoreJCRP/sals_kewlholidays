@@ -114,6 +114,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
 
 .note { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.note.experimental { color: #f5c46b; border: 1px solid rgba(245, 196, 107, .45); background: rgba(245, 196, 107, .08); border-radius: 6px; padding: 6px 8px; }
 .good { color: var(--good); }
 .hr { border-top: 1px solid var(--line); }
 .kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; font-size: 13px; }
@@ -172,7 +173,8 @@ table.grid select option { background: #1b1f2d; }
 /* Fireworks                                                           */
 /* ------------------------------------------------------------------ */
 /* Ten tabs: they scroll sideways rather than squeeze. */
-.tabs { overflow-x: auto; scrollbar-width: none; }
+/* Eleven tabs do not fit across the panel: a second row, never a hidden scroll. */
+.tabs { flex-wrap: wrap; overflow-x: visible; }
 .tabs::-webkit-scrollbar { height: 0; }
 .tab { padding: 8px 6px; }
 
@@ -207,3 +209,14 @@ table.grid select option { background: #1b1f2d; }
 .item.wrap { flex-wrap: wrap; }
 .item.wrap .main { flex: 1 1 100%; }
 .item.wrap .d { white-space: normal; }
+/* A location spread over several places across the map. */
+.note.warn, .d.warn { color: #f5c46b; }
+.note.warn { border: 1px solid rgba(245, 196, 107, .45); background: rgba(245, 196, 107, .08); border-radius: 6px; padding: 6px 8px; }
+
+/* Spotlights tab: projection previews */
+.art-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.art-card { display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); color: inherit; cursor: pointer; text-align: left; font: inherit; }
+.art-card canvas { width: 100%; height: auto; border-radius: 6px; display: block; }
+.art-card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.sw.custom { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.sw.custom input[type=color] { width: 22px; height: 18px; padding: 0; border: none; background: none; cursor: pointer; }

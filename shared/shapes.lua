@@ -522,6 +522,19 @@ Shapes.List = {
     { name = 'wreath_party', kind = 'wreath', label = 'Party wreath', size = 0.8, holidays = { 'party' }, light = { z = 0.5, color = { 255, 255, 255 }, range = 1.0 },
       parts = wreath({ foliage = { C.red, C.yellow, C.green, C.blue, C.hotpink, C.orange }, bow = C.white, bulbs = { 255, 255, 255 } }),
       desc = 'Every color, white bow.' },
+
+    -- 1.5.0: the New Year's ball drop (kind 'drop'). Drawn by
+    -- client/balldrop.lua, not from these parts: they are its outline for
+    -- the panel's thumbnail and for picking. size is the pole's height;
+    -- the ball's own size and colors are its `drop` table (shared/sleigh.lua).
+    { name = 'balldrop', kind = 'drop', label = 'Ball drop', size = 14.0, holidays = { 'newyear' }, light = { z = 0.95, color = { 255, 230, 190 } },
+      parts = {
+          P(0, 0, 0.03, 0.07, 0.07, 0.03, C.black),
+          P(0, 0, 0.5, 0.012, 0.012, 0.47, C.gray),
+          sphere(0, 0, 0.92, 0.075, C.silver),
+          sphere(0.03, 0.04, 0.95, 0.03, C.gold, { over = true }),
+      },
+      desc = 'A lit ball at the top of a pole. In the last minute of a countdown at its location it drops, and lands at midnight.' },
 }
 
 -- Every part is OPAQUE. Translucent markers do not sort against each
@@ -579,6 +592,7 @@ function Shapes.ClampSize(s, size)
     local v = tonumber(size) or s.size
     local lo, hi = 0.4, 8.0
     if s.kind == 'wreath' then lo, hi = 0.3, 4.0 end
+    if s.kind == 'drop' then lo, hi = 4.0, 40.0 end      -- a ball drop's pole
     if v < lo then v = lo elseif v > hi then v = hi end
     return v
 end

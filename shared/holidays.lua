@@ -67,10 +67,10 @@ Holidays.Catalog = {
             { model = 'xm3_prop_xm3_snowman_01b',    label = 'Snowman (scarf)', build = 2802, desc = 'The snowman in a knitted scarf.' },
             { model = 'xm3_prop_xm3_snowman_01c',    label = 'Snowman (hat)', build = 2802, desc = 'The snowman in a hat.' },
             { model = 'm23_2_prop_m32_candycane_01a', label = 'Candy cane (giant)', build = 3095, desc = 'A giant striped candy cane, about a person tall. Two frame a doorway.' },
-            { model = 'm23_2_prop_m32_sleigh_01a',   label = 'Sleigh', far = true, build = 3095, desc = 'Santa\'s sleigh, full size. Lawns and rooftops; put reindeer in front of it.' },
-            { model = 'm23_2_prop_m32_giftbox_small_01a', label = 'Gift box (small)', build = 3095, desc = 'A small wrapped gift with a bow.' },
-            { model = 'm23_2_prop_m32_giftbox_med_01a',   label = 'Gift box (medium)', build = 3095, desc = 'A wrapped gift, knee high.' },
-            { model = 'm23_2_prop_m32_giftbox_lar_01a',   label = 'Gift box (large)', build = 3095, desc = 'A large wrapped gift, waist high.' },
+            { model = 'sk_santa_sleigh',             label = 'Sleigh', far = true, desc = 'Santa\'s sleigh, full size: red and gold, lanterns lit, fairy lights along the rim. Lawns and rooftops; the Sleigh tab gives it reindeer.' },
+            { model = 'm23_2_prop_m32_giftbox_small_01a', label = 'Gift box (small)', build = 3095, desc = 'A wrapped gift with a bow, waist high (0.9 m).' },
+            { model = 'm23_2_prop_m32_giftbox_med_01a',   label = 'Gift box (medium)', build = 3095, desc = 'A wrapped gift, chest high (1.2 m).' },
+            { model = 'm23_2_prop_m32_giftbox_lar_01a',   label = 'Gift box (large)', build = 3095, desc = 'A big stack of wrapped gifts, 2.5 m across and taller than a person.' },
             { model = 'm23_2_prop_m32_giftbox_long_01a',  label = 'Gift box (long)', build = 3095, desc = 'A long, flat wrapped box.' },
             { model = 'm23_2_prop_m32_giftbox_xlar_01a',  label = 'Gift box (huge)', build = 3095, desc = 'A huge wrapped gift, taller than a child.' },
             { model = 'm23_2_prop_m32_present_pallet_01a', label = 'Pallet of presents', build = 3095, desc = 'A pallet stacked with wrapped presents. Under the big tree.' },
@@ -108,8 +108,8 @@ Holidays.Catalog = {
             { model = 'prop_mem_candle_combo',   label = 'Candle cluster', collision = false, desc = 'A cluster of small candles, lit. Steps and windowsills.' },
             { model = 'apa_mp_h_acc_candles_01', label = 'Candle set (tray)', collision = false, build = 944, desc = 'A tray of candles. Tables and sideboards.' },
             { model = 'm25_2_prop_m52_present_01a', label = 'Wrapped present', build = 3570, desc = 'A single wrapped present with a ribbon.' },
-            { model = 'm23_2_prop_m32_giftbox_small_01a', label = 'Gift box (small)', build = 3095, desc = 'A small wrapped gift with a bow.' },
-            { model = 'm23_2_prop_m32_giftbox_med_01a',   label = 'Gift box (medium)', build = 3095, desc = 'A wrapped gift, knee high.' },
+            { model = 'm23_2_prop_m32_giftbox_small_01a', label = 'Gift box (small)', build = 3095, desc = 'A wrapped gift with a bow, waist high (0.9 m).' },
+            { model = 'm23_2_prop_m32_giftbox_med_01a',   label = 'Gift box (medium)', build = 3095, desc = 'A wrapped gift, chest high (1.2 m).' },
         },
     },
 
@@ -432,9 +432,9 @@ Holidays.Catalog = {
             { model = 'xm3_prop_xm3_balloon_01a', label = 'Balloon (single)', collision = false, build = 2802, desc = 'A single balloon on a string.' },
             { model = 'xs_prop_arena_confetti_cannon', label = 'Confetti cannon', build = 1604, desc = 'A confetti cannon on a stand. Entrances and stages.' },
             { model = 'v_res_cakedome',          label = 'Cake under glass', collision = false, desc = 'A cake under a glass dome.' },
-            { model = 'm23_2_prop_m32_giftbox_small_01a', label = 'Gift box (small)', build = 3095, desc = 'A small wrapped gift with a bow.' },
-            { model = 'm23_2_prop_m32_giftbox_med_01a',   label = 'Gift box (medium)', build = 3095, desc = 'A wrapped gift, knee high.' },
-            { model = 'm23_2_prop_m32_giftbox_lar_01a',   label = 'Gift box (large)', build = 3095, desc = 'A large wrapped gift, waist high.' },
+            { model = 'm23_2_prop_m32_giftbox_small_01a', label = 'Gift box (small)', build = 3095, desc = 'A wrapped gift with a bow, waist high (0.9 m).' },
+            { model = 'm23_2_prop_m32_giftbox_med_01a',   label = 'Gift box (medium)', build = 3095, desc = 'A wrapped gift, chest high (1.2 m).' },
+            { model = 'm23_2_prop_m32_giftbox_lar_01a',   label = 'Gift box (large)', build = 3095, desc = 'A big stack of wrapped gifts, 2.5 m across and taller than a person.' },
             { model = 'm25_2_prop_m52_present_01a', label = 'Wrapped present', build = 3570, desc = 'A single wrapped present with a ribbon.' },
             { model = 'ba_prop_club_champset',   label = 'Champagne service', collision = false, build = 1493, desc = 'Champagne in a bucket with glasses.' },
             { model = 'prop_table_03',            label = 'Picnic table', desc = 'A wooden picnic table with benches.' },
@@ -530,6 +530,11 @@ for name, h in pairs(Holidays.Catalog) do
         if not found then
             props[#props + 1] = { model = rack.model, label = rack.label, desc = rack.desc, launcher = rack.name }
         end
+    end
+    -- And the spotlight fixtures (shared/spotlights.lua); the Spotlights
+    -- tab places them.
+    for _, f in ipairs((Spot and Spot.Fixtures) or {}) do
+        props[#props + 1] = { model = f.model, label = f.label or f.name, spotlight = f.name }
     end
     base[name] = { props = props, from = h.from, to = h.to, enabled = h.enabled }
 end

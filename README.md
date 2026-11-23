@@ -72,6 +72,13 @@ Free, escrow-protected, no dependencies.
   salvos on each new verse, and a finale. Or a program on the beat (Grand,
   Steady, Gentle, Rapid, Finale only), or the show's own fireworks steps.
   Light, normal or heavy.
+- **Spotlights and projectors.** Light a tree, a wall or a whole building
+  front in color with a spotlight you aim by clicking it, steady, cycling
+  through the holiday's colors, or running a pattern; hide the fixture for
+  an in-the-ground uplight. Or turn the same fixture into a projector that
+  puts moving pictures on the wall: falling snow, waving snowmen, dancing
+  turkeys, bats past the moon, rising hearts and more (fifteen in all).
+  Shows drive them on their channel.
 - **Shapes in the sky.** Hearts, stars, shamrocks, pumpkins, a menorah, the
   Star of David, wedding rings, and at New Year's the year itself, spelled
   across the sky. Drawn shapes turn to face whoever is watching.
@@ -117,10 +124,12 @@ Free, escrow-protected, no dependencies.
   ornaments and orbs, sunflowers, snowflake stakes, a soldier silhouette, a
   lit cross, lily stands, a candle vigil, a draped casket. Wall pieces:
   window candles, bunting (patriotic and mourning), banners.
-- **Stationary objects only.** Strings, figures and every other decoration
-  attach to the map and to fixed objects. They do not attach to vehicles
-  or to anything that moves (the pier's Ferris wheel included): a string
-  clicked onto one stays where it was clicked.
+- **Floats: decorations that drive (experimental).** Decorate a fire engine for the
+  holiday parade and the lights go where it goes, around every corner and
+  up every hill. Put the same float on one vehicle, on a plate, on every
+  vehicle of a model, or on a moving object like the pier's Ferris wheel.
+  Give a parade vehicle its own plate while you are at it. A show runs on a
+  float like on any location, music included. Needs OneSync. Experimental in 1.3.0.
 - **Decorating tips** for each holiday, written for the tools in this
   resource (which channel to put the roofline on, which show suits which
   carol), shown in chat and on an on-screen card.
@@ -142,6 +151,17 @@ Free, escrow-protected, no dependencies.
   while Christmas is in season. Weather is left alone unless you say
   otherwise, because your weather resource owns it.
 - **Localization:** every player-facing string lives in `locales/en.lua`.
+- **New Year's ball drop.** A lit crystal ball on a pole, 4 to 40 m tall.
+  Start a countdown at its location and it drops over the last minute and
+  lands at midnight, with a flash and a burst of sparkles. Everyone nearby
+  sees the same ball at the same moment.
+- **Santa's sleigh with real reindeer.** Our own sleigh (red lacquer, gold
+  scrollwork and runners, lit lanterns, fairy lights, Santa's sack in the
+  back) pulled by two to eight of the game's deer, with antlers, a
+  red-nosed lead and gold bells.
+  Players walk up and press E to ride it; **Santa's flight** takes off,
+  circles over the location for everyone to see, and lands where it was
+  parked.
 
 ## Requirements
 
@@ -152,7 +172,9 @@ None beyond a FiveM server. Everything else is detected at runtime:
 | Framework | `qb-core`, `qbx_core`, `es_extended`, or none |
 | Menu | `qb-menu`, `ox_lib` (without either, every action is a `/holiday` subcommand) |
 | Notifications | qb-core, ox_lib, ESX, or GTA's own |
-| Game build | Any. Props from newer DLCs appear only on builds that have them (`sv_enforceGameBuild`); the catalog notes which |
+| Game build | Any. Props from newer DLCs appear only on builds that have them (`sv_enforceGameBuild`); the catalog notes which. Santa's sleigh is our own model and works on every build |
+| OneSync | Needed for floats (decorated vehicles) and sleigh rides only |
+| Database | `oxmysql`, for floats only: looking up who owns a vehicle (owners decorating their own, refusing a plate a player owns, rewriting an owned plate). Without it, decorators still make and bind floats |
 
 ## Installation
 
@@ -276,7 +298,14 @@ current one (default `main`). Name locations after the place: `firehouse`,
 `hospital`, `247 sandy` (spaces are fine). The Shows, Edit, Locations and
 Settings tabs show every location that exists with its counts and
 distance, so you pick one or type a new name; `/holiday locations` prints
-the list and `/holiday location <name>` sets yours. Every string of
+the list and `/holiday location <name>` sets yours. **Pick the location
+before you start placing**: everything you place joins it, so three
+stations decorated under `main` are one location, and a show, a clear or a
+saved layout covers all three. If that has already happened, stand at each
+building and use **Move decorations into a location** in the Locations tab
+(or `/holiday claim 40 Station 1`): everything within the distance joins the
+location you name. A location spread over several places is flagged
+"Spread over N separate places". Every string of
 lights has a channel 1-4 (`/holiday channel <n>`). A show runs against one
 location and drives its four channels separately, so the roofline on 1,
 the windows on 2, the tree on 3 and the door on 4 can play against each
@@ -284,7 +313,7 @@ other.
 
 **Locations tab: travel, and layouts for next year.** Every decorated
 location is listed with **Travel** (a fade and a teleport, vehicle
-included) and one chip per holiday it holds with the count: a location
+included, to the middle of the location's largest area) and one chip per holiday it holds with the count: a location
 is a place, and it holds a set per holiday (Christmas at the firehouse,
 Halloween at the same firehouse) that the calendar swaps. Admins clear
 one holiday's set from its chip, or `/holiday clear firehouse halloween`.
@@ -295,13 +324,16 @@ layouts are kept, and the server writes
 `data/decorations.json.before-clear-<time>` first so a wrong click can be
 undone by renaming that copy over `decorations.json` and restarting.
 **Save my location as a layout** copies everything at your
-current location under a name with a note ("Firehouse 2026: roofline on
-channel 1, check the new awning"). After the holiday, clear the location;
+current location (the box says which) under a name with a note
+("Firehouse 2026: roofline on channel 1, check the new awning"). The name
+names the layout, not the location; switch location first to save a
+different one. After the holiday, clear the location;
 next year **Load** the layout back (adding to the location, or replacing
 it), travel there, check it against the building, change what an MLO
 update broke, and **Save over**. Rename, edit the note, delete; **Next
 location** walks the list. Traveling to a layout stamps it "checked" with
-the date, so the list shows what has been reviewed this year.
+the date, so the list shows what has been reviewed this year. **Delete**
+removes the saved layout only; the decorations stay up.
 `/holiday go <layout>` travels from chat. Layouts live in
 `data/presets.json`; anyone who may decorate can save and load, and only
 the saver or an admin can overwrite, rename or delete one.
@@ -323,6 +355,182 @@ The Edit tab also lists everything within reach with the same buttons and
 a group dropdown, plus **Undo my last placement**. `/holiday remove` takes
 the nearest decoration, `/holiday undo` the last one you placed. Admins
 can clear a whole location from the Edit tab's list.
+
+### Floats (decorated vehicles) — experimental
+
+> **Experimental.** Floats are new in 1.3.0 and have not yet been tested
+> on a live server. Expect rough edges: lights can trail a vehicle by a
+> frame at highway speed, and a garage-spawned vehicle may take a couple of
+> seconds to show its float. Turn them off under Settings > Floats if they
+> cause trouble, and please report what you see.
+
+A **float** is a set of decorations that rides on a vehicle, or on an object
+that moves by itself. It is stored relative to the vehicle, so it goes
+wherever the vehicle goes.
+
+**Making one.** Park the vehicle, stand next to it (or sit in it), open the
+**Vehicles** tab, name the float under **Make a float from this vehicle**
+and press **Make float**. The vehicle is held still and every placement
+from the Props, Lights, Figures and Inflatables tabs now goes onto the
+float: aim at the vehicle itself. A banner at the top of those tabs and a
+line on screen say which float you are decorating. Press **Done** (or
+`/holiday float done`) when finished, and drive. Sitting in the vehicle is
+the surest way to pick it; standing, the tab takes the vehicle whose body
+is nearest you (within 4 m). A vehicle a script parks on each player's
+own screen (a display engine at the station, a dealership car) is marked
+"Only in your game": it carries the float by its spot, like an object, and
+every player whose game parks the same vehicle there sees it. Plate and
+whole-model bindings need a shared vehicle. To change it later, stand
+at the vehicle and press **Decorate** (or `/holiday float edit`). The Edit
+tab and the aim-and-click tool work on a float's decorations like any
+other; moving one holds the vehicle still while you do.
+
+**Putting it on more vehicles.** Stand at a vehicle, pick the float under
+**Put a float on this vehicle**, and choose:
+
+| Choice | Wears the float |
+|---|---|
+| This vehicle | This one, also after it goes back to the garage (matched by its plate and model together) |
+| This plate | Any vehicle with this plate |
+| Every one of this model | The whole fleet of that model |
+
+When two match one vehicle, the narrower one wins (this vehicle, then a
+plate, then a model). **Take the float off** removes this vehicle's own
+bindings; a model binding still applies and the panel says so. Every
+float in the list shows what wears it; click a binding to remove it.
+
+**Setting a plate.** Type a **New plate** before **Put it on** and the
+vehicle gets it, so a parade engine can carry `XMAS01` and the float
+follows that plate. A plate another vehicle already has, or one a player
+owns, is refused. A player-owned vehicle's plate is never changed unless
+the server turns on **...also on player-owned vehicles**; then the garage
+database is rewritten too (qb/qbx `player_vehicles`, ESX `owned_vehicles`,
+through oxmysql) and the owner gets keys for the new plate where the keys
+resource allows it (qb-vehiclekeys, qbx_vehiclekeys). Other scripts that
+remember plates (insurance, MDT, impound) are not told. A binding made
+with a new plate offers **Remove and restore plate**.
+
+**On an object.** Under **On an object**, name the float and aim at the
+object (the pier's Ferris wheel, a gate that swings). Its decorations ride
+the object as it moves. **Decorate on its object** lets you add to it.
+Objects are matched by model and position, on each player's game.
+
+**Shows.** A float is a location: run a show on it from the Shows tab with
+the float as your location, or with `/holiday show`. Its music plays from
+the float and gets louder as it drives past (turn that off with **A show's
+music plays from the float**).
+
+**What players see.** Each player draws the floats nearest to them, up to
+**Floats drawn at once** (6), within the float render distance. Props on a
+float are never solid: a solid prop on a moving car would throw it around.
+Fireworks launchers cannot go on a float.
+
+**Who may.** Decorators can make, decorate and bind any float. With
+**Players may decorate vehicles they own** on, a player who is not a
+decorator can make floats (up to **Floats per vehicle owner**) on a vehicle
+they own and put them on that vehicle only. That needs oxmysql to look the
+owner up.
+
+**Saving.** Floats and their decorations are always saved
+(`data/floats.json`, `data/decorations.json`). Which vehicles wear which
+float is saved too, unless **Floats stay on their vehicles after a
+restart** is off.
+
+### Spotlights and projectors
+
+The **Spotlights** tab. Pick a fixture (floodlight, box floodlight, studio
+light, light tower), then the kind:
+
+- **Spotlight**: a colored beam on what you aim at. Pick a palette of the
+  holiday or **Your own color**, turn on **Cycle through the colors** to step
+  through the palette, and choose the beam (**Narrow**, **Wide**, **Flood**),
+  **Brightness**, a pattern and a channel.
+- **Projector**: moving pictures on the wall you aim at, with a soft glow of
+  the same color behind them. Pick a projection (the cards in the tab move
+  the way it will on the wall), its colors, **Picture size** and **Speed**.
+  Projections: Snowfall, Snowmen, Christmas, Twinkling stars, Hearts,
+  Shamrocks, Eggs and bunnies, Fireworks, Halloween, Bats and moon, Dancing
+  turkeys, Falling leaves, Dreidels, Candles, Party. Each is offered under its
+  own holidays; Twinkling stars under all of them.
+
+Press **Place and aim**, set the fixture down like a prop, then click the
+tree or wall it should light (up to 40 m away, Server settings). You see the
+light while aiming; the scroll wheel changes the beam width or the picture
+size; right click goes back to placing. The fixture turns to face what it
+lights. **Hide the fixture** leaves only the light, as if it were buried in
+the ground. In the Edit list a spotlight has **Aim** (re-aim it) and
+**Settings** (change any of the above); the aim-and-click tool has **Aim**
+too. Moving a fixture keeps its aim.
+
+**Trees.** A light at the foot of a tree pointing up only grazes the
+branches, so a spotlight aimed at a tree lights it from the side instead:
+aim at a Christmas tree (or any decoration) you placed and the tool outlines
+it, aims at its middle and turns on **Light a tree** by itself; the whole
+tree shows in your colors and the building behind it stays dark. For a tree
+of the map, turn on **Light a tree** in the tab, pick its size, and click
+the trunk.
+
+Every player nearby sees them, and sees the same thing at the same moment:
+the colors, fades and pictures run on the network clock everyone shares. In a
+show, a spotlight's brightness follows its channel like a string of lights,
+and Dancing turkeys dance to the track's beat. Spotlights do not ride
+on floats. Each player draws at most **Beams per frame** beams (16), nearest
+first, with no shadows unless **Beams that cast shadows** is raised; projector
+pictures share a capped part of the same per-frame triangle budget as the
+bulbs. Like real ones, spotlights are hard to see in daylight: they are made
+for the night.
+
+### Santa's sleigh and the ball drop
+
+The **Sleigh & ball drop** tab.
+
+**New Year's ball drop.** Set the **Pole height** (4 to 40 m), the **Ball
+size**, how long **the drop takes** (10 to 120 seconds) and the **Lights**:
+**Rainbow**, **Sparkle**, **Color cycle** or **Steady** (the last three in the
+New Year's colors, or **Automatic**). **Place a ball drop** and set it down
+like a yard piece; Page Up and Page Down change the pole's height. Then start
+a countdown at its location in the Shows tab (`00:00` counts to midnight).
+The ball waits at the top, starts down that many seconds before zero, and
+lands on zero: a flash, a burst of sparkles, and the ball races through the
+colors. Players nearby see **Watch the ball drop at <location>** with the
+countdown. The ball stays down after midnight (15 minutes, Server settings),
+then rises again over twenty seconds; a canceled countdown sends it back up.
+In the Edit list a ball drop has **Test drop** (it drops in ten seconds, for
+you only) and **Ball** (change any of the above). At most two per location.
+
+**Santa's sleigh.** Choose the **Reindeer** (2, 4, 6 or 8), their **Coats**
+(mixed tan and brown, tan, brown or white), what they do **While parked**
+(standing, grazing, prancing), the **red nose** on the lead reindeer,
+**presents in the back** (Santa's sack, wrapped presents and a teddy bear),
+and whether **players may ride it**, then **Place the sleigh** like a prop.
+The sleigh is a model of our own, lit at night by its two lanterns and the
+fairy lights along its rim, with gold sparkles twinkling around it. The
+reindeer are the game's own deer, each with
+antlers, harnessed to the sleigh with leather traces and a gold bell on every
+collar. A sleigh placed from the Props tab has no team; **Add reindeer** in
+the Edit list gives it one (and **Reindeer** there changes it, or removes it).
+
+**Riding.** Walk up to a parked sleigh and press **E**. You drive it; the
+reindeer walk, trot, canter and gallop with your speed and the bells jingle
+for everyone nearby. Get out to end the ride and the sleigh is back where it
+was parked. A ride also ends after **Longest ride** (10 minutes) or when
+nobody has driven it for 20 seconds. Under the sleigh is a hidden vehicle
+(a golf cart by default, **Hidden vehicle under a ridden sleigh**) that
+nobody sees; if a rider does not sit on the sleigh's seat with your game
+build, the three **Sleigh on the vehicle** settings move it.
+
+**Santa's flight.** **Santa's flight** in the tab (or `/holiday sleigh fly`)
+sends the sleigh at your location up: it runs, takes off, climbs while it
+circles over the location, flies its laps, comes down and lands where it was
+parked, with a trail of gold sparkles and its bells. **Land now** brings it
+straight back. Everyone within **Seen within** (1.5 km) sees it in the same
+place at the same moment, and a player who arrives mid-flight sees it where
+it is. With **A countdown ends with Santa's flight** on, a countdown at a
+location with a sleigh ends with the flight. Circle size, height, laps and
+speed are settings; who may start a flight is too (decorators by default).
+
+Reindeer are spawned on each player's own game like the props, nearest
+sleighs first, at most **Reindeer at once** (24) per player.
 
 ### Fireworks
 
@@ -409,12 +617,16 @@ in season (or the one named) and shows them on a card for 45 seconds.
 | `/holiday remove` / `undo` | Decorators | Remove the nearest / last decoration |
 | `/holiday locations` | Anyone | Every location, with counts and distance |
 | `/holiday location <name>` | Anyone | Set the location new decorations join (spaces allowed) |
+| `/holiday claim <meters> [location]` | Decorators | Move everything within that distance into a location (yours when none is named) |
 | `/holiday go <layout>` | Decorators | Travel to a saved layout |
+| `/holiday float edit` / `done` | Decorators | Decorate the float on the vehicle you are at / finish decorating |
 | `/holiday channel <1-4>` | Anyone | Set the channel new strings use |
 | `/holiday show [track] [show] [fireworks] [light\|normal\|heavy]` | Decorators | Start a show in your group; fireworks is `score`, `grand`, `steady`, `gentle`, `rapid`, `finale`, `show` or `off` (default: `score` where there are launchers) |
 | `/holiday rehearse <track> [show] [fireworks]` | Decorators | The show for you only |
 | `/holiday countdown <seconds\|HH:MM\|midnight> <track> [show] [fireworks]` | Decorators | Count down, then the show |
 | `/holiday stop [group]` | Decorators | Stop the show or the countdown |
+| `/holiday sleigh fly\|land [location]` | Decorators | Santa's flight from your location (or the one named), or land it now |
+| `/holiday balldrop test [seconds]` | Anyone | Drop the nearest ball drop, for you only |
 | `/holiday launch` | Decorators | Launch mode: fire from the keyboard |
 | `/holiday fire <shell\|salvo\|sweep\|cake\|fountain\|shape\|finale> [channel]` | Decorators | Fire by hand |
 | `/holiday fireworks on\|off\|calm\|normal\|volume <0-1>\|whistle on\|off` | Anyone | Fireworks, for you only |
@@ -453,6 +665,16 @@ Open `/holiday` and the Settings tab. Sections:
   second and drawn sparks per frame (each player's quality setting scales
   them); how far they are seen and heard; volume; sound arriving late with
   distance; burst light; firing by hand; the longest countdown.
+- **Spotlights and projectors**: on or off for everyone; spotlights per
+  location; how far one may point; render distances; beams per frame and how
+  many cast shadows; beam strength, width and falloff; the projector's glow,
+  pictures per frame and picture brightness.
+- **Floats (decorated vehicles, experimental)**: on or off; whether players may decorate
+  vehicles they own; whether bindings survive a restart; whether a show's
+  music plays from the float; whether decorators may set plates, and also
+  on player-owned vehicles; how many floats each player draws and how far;
+  how far from the vehicle a decoration may sit; decorations and bulbs per
+  float; floats on the server and per vehicle owner.
 - **Custom props**: add any streamed model to a holiday (model, label, wall
   mount).
 - **Custom tracks**: register an `.ogg` you dropped in `audio/`.
@@ -481,12 +703,24 @@ exports['sals_kewlholidays']:FireFireworks(group, action, channel) --> boolean
 exports['sals_kewlholidays']:StopShow(group)            --> boolean
 exports['sals_kewlholidays']:IsShowRunning(group)       --> boolean
 exports['sals_kewlholidays']:GetDecorations()           --> list of records
+
+-- Floats. `vehicle` is an entity handle or a network id.
+exports['sals_kewlholidays']:ApplyFloat(vehicle, name)  --> boolean: wears the float until the vehicle is deleted (not saved)
+exports['sals_kewlholidays']:ClearFloat(vehicle)        --> boolean: takes off what ApplyFloat put on
+exports['sals_kewlholidays']:GetFloats()                --> { 'Engine 7 Xmas', ... }
+exports['sals_kewlholidays']:GetVehicleFloat(vehicle)   --> float name or nil
 ```
+
+A vehicle's float is also readable anywhere as the entity state bag
+`Entity(vehicle).state.skhFloat`. Only this resource writes it.
 
 Records: `{ id, kind = 'prop' | 'lights', holiday, group, by, byName, updated,
 model, coords, heading }` for props, plus `fw = { load, palette, channel,
 lift, tilt, hidden }` for a launcher; `{ ..., points, palette, pattern,
-spacing, channel, length }` for lights.
+spacing, channel, length }` for lights. A float's decorations carry
+`float = true`, their `group` is the float's name, and their `coords`,
+`points` and `heading` are relative to the vehicle (x right, y forward,
+z up).
 
 The firework effects, launchers, loads, holiday shapes and programs are in
 `shared/fireworks.lua`, readable and editable: an effect lists the game's
@@ -501,9 +735,15 @@ on `main` (Settings → Updates to change it). It fetches `update.json` at start
 every few hours; a newer version is announced in the console and in the
 Settings tab, where **Apply update** downloads every file in the manifest,
 verifies each by size and CRC32 before writing anything, never touches
-`data/`, and asks for a restart. **Apply updates automatically** does that
-on its own; **Restart after applying** restarts the resource a minute later
-when no show is running. `/holidayadmin update check|apply` does the same
+`data/`, and asks you to load it: type `refresh`, then
+`restart sals_kewlholidays`, in the server console or txAdmin. **Restart
+alone is not enough** when a release adds a script (1.3.0 added two): FXServer
+keeps the old file list until `refresh`, the new scripts never load, and
+opening the panel fails with `attempt to index a nil value (field 'Floats')`.
+The resource spots this at start and says so in the console and to admins in
+game. **Apply updates automatically** applies on its own; **Restart after
+applying** runs `refresh` and the restart a minute later when no show is
+running. `/holidayadmin update check|apply` does the same
 from chat or the server console.
 
 Limits, by design: a resource cannot create folders or delete files, so a

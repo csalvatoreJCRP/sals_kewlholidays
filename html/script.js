@@ -27,7 +27,10 @@
         figure: { name: null, palette: null, pattern: 'on', style: 'rope', channel: 1, size: 1.2 },
         show: { track: null, show: 'classic', fwMode: 'score', fwIntensity: 'normal' },
         fw: { rack: 'mortar', load: 'mixed', palette: null, channel: 1, lift: 1.0, tilt: 0, hidden: false },
+        spot: { fixture: 'flood', mode: 'beam', beam: 'wide', bright: 1.0, palette: null, rgb: null, cycle: false, pattern: 'on', channel: 1, hidden: false, art: null, scale: 1.0, speed: 1.0 },
         countdown: { target: '10', open: false },
+        sleigh: { pairs: 2, coat: 'mixed', pose: 'stand', nose: true, ride: true, presents: true },
+        ball: { height: 14, ball: 2.4, seconds: 60, pattern: 'rainbow', palette: null },
         editing: null,
         settings: null, tipsInline: null,
     };
@@ -36,8 +39,8 @@
     // ------------------------------------------------------------------
     // Panel
     // ------------------------------------------------------------------
-    const TABS = ['props', 'lights', 'figures', 'inflatables', 'fireworks', 'shows', 'edit', 'places', 'tips', 'settings'];
-    const PLACING = ['props', 'lights', 'figures', 'inflatables', 'fireworks'];
+    const TABS = ['props', 'lights', 'figures', 'inflatables', 'fireworks', 'spotlights', 'extras', 'shows', 'edit', 'places', 'vehicles', 'tips', 'settings'];
+    const PLACING = ['props', 'lights', 'figures', 'inflatables', 'fireworks', 'spotlights', 'extras'];
 
     // ------------------------------------------------------------------
     // Thumbnails and hover previews
@@ -135,13 +138,27 @@
         }
         const body = $('p-body');
         body.innerHTML = '';
-        if (!d.who.decorator && PLACING.includes(S.tab)) {
+        const editingFloat = d.floats && d.floats.editing;
+        if (!d.who.decorator && PLACING.includes(S.tab) && !editingFloat) {
             body.appendChild(el('div', 'note', T('ui_not_decorator')));
         }
-        if (PLACING.includes(S.tab) && !h.inSeason) {
+        if (editingFloat && PLACING.includes(S.tab)) {
+            // Everything placed now rides on the float: say so, with Done.
+            const bar = el('div', 'item active');
+            const main = el('div', 'main');
+            main.appendChild(el('div', 't', T('ui_fl_editing').replace('%{name}', editingFloat.name)));
+            main.appendChild(el('div', 'd', T('ui_fl_editing_help')));
+            bar.appendChild(main);
+            const done = el('button', 'btn small primary', T('ui_fl_done'));
+            done.addEventListener('click', () => post('floatDone'));
+            bar.appendChild(done);
+            body.appendChild(bar);
+        }
+        if (PLACING.includes(S.tab) && S.tab !== 'extras' && !h.inSeason) {
             body.appendChild(el('div', 'note', T('ui_off_season_note').replace('%{holiday}', h.label).replace('%{mode}', d.season.mode)));
         }
-        ({ props: renderProps, lights: renderLights, figures: renderFigures, inflatables: renderInflatables, fireworks: renderFireworks, shows: renderShows, edit: renderEdit, places: renderPlaces, tips: renderTips, settings: renderSettings })[S.tab](body);
+        stopArtPreviews();
+        ({ props: renderProps, lights: renderLights, figures: renderFigures, inflatables: renderInflatables, fireworks: renderFireworks, spotlights: renderSpotlights, extras: renderExtras, shows: renderShows, edit: renderEdit, places: renderPlaces, vehicles: renderVehicles, tips: renderTips, settings: renderSettings })[S.tab](body);
 
         const foot = $('p-foot');
         foot.innerHTML = '';
@@ -413,6 +430,354 @@
         return box;
     }
 
+    // ---- Spotlights and projectors ----
+    // Pick a fixture, beam or projector, colors, pattern; Place, then aim
+    // at the tree or wall in the world. Projections animate here from the
+    // same pictures and motions the game draws (client/spotlights.lua).
+    const ART = { img: null, tints: {}, timers: [] };
+    function artImage() {
+        if (!ART.img) { ART.img = new Image(); ART.img.src = 'projections.png'; }
+        return ART.img;
+    }
+    function stopArtPreviews() { for (const id of ART.timers) cancelAnimationFrame(id); ART.timers = []; }
+    function tinted(c) {
+        const key = c.join(',');
+        if (ART.tints[key]) return ART.tints[key];
+        const img = artImage();
+        if (!img.complete || !img.naturalWidth) return null;
+        const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+        const g = cv.getContext('2d');
+        g.drawImage(img, 0, 0);
+        g.globalCompositeOperation = 'source-in';
+        g.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+        g.fillRect(0, 0, cv.width, cv.height);
+        ART.tints[key] = cv;
+        return cv;
+    }
+    function hh(seed, i, k) {
+        let n = Math.imul((seed + i * 31 + k * 7919) | 0, 374761393) ^ Math.imul(k * 131 + i, 668265263);
+        n = Math.imul(n ^ (n >>> 13), 1274126177);
+        return ((n ^ (n >>> 16)) >>> 0) % 10007 / 10007;
+    }
+    const TAU = Math.PI * 2;
+    const slotX = (i, n) => n <= 1 ? 0 : -0.72 + 1.44 * (i - 1) / (n - 1);
+    const MOTIONS = {
+        fall(i, t, s) { const ph = hh(s, i, 3), v = 0.7 + 0.6 * hh(s, i, 6), dir = hh(s, i, 5) < 0.5 ? -1 : 1;
+            return [hh(s, i, 1) * 1.9 - 0.95 + 0.07 * Math.sin(t * 0.8 * v + ph * TAU), 1.2 - ((t * 0.11 * v + ph * 2.4) % 2.4), dir * t * 0.5 * v + ph * TAU, 1, 1, 1, false, 1]; },
+        rise(i, t, s) { const ph = hh(s, i, 3), v = 0.7 + 0.6 * hh(s, i, 6);
+            return [hh(s, i, 1) * 1.8 - 0.9 + 0.08 * Math.sin(t * 0.9 * v + ph * TAU), -1.2 + ((t * 0.1 * v + ph * 2.4) % 2.4), 0.25 * Math.sin(t * 0.9 + ph * TAU), 1, 1, 1, false, 1]; },
+        drift(i, t, s) { const ph = hh(s, i, 3), v = 0.7 + 0.6 * hh(s, i, 6), dir = i % 2 === 0 ? -1 : 1;
+            let x = -1.25 + ((t * 0.07 * v + ph * 2.5) % 2.5); if (dir < 0) x = -x;
+            return [x, hh(s, i, 2) * 1.4 - 0.7 + 0.06 * Math.sin(t * 1.1 * v + ph * TAU), 0.15 * Math.sin(t * 0.8 + ph * TAU), 1, 1, 1, dir < 0, 1]; },
+        twinkle(i, t, s, n) { const ph = hh(s, i, 3); let rr = Math.sqrt(hh(s, i, 1)) * 0.9, a = hh(s, i, 2) * TAU; if (n === 1) { rr = 0.45; a = 0.8; }
+            const tw = 0.5 + 0.5 * Math.sin(t * (1.5 + 2 * hh(s, i, 4)) + ph * TAU), dir = hh(s, i, 5) < 0.5 ? -1 : 1;
+            return [rr * Math.cos(a), rr * Math.sin(a), dir * t * 0.2, 0.3 + 0.7 * tw, 0.85 + 0.15 * tw, 1, false, 1]; },
+        bob(i, t, s, n) { const ph = hh(s, i, 3);
+            return [slotX(i, n), -0.3 + 0.1 * (hh(s, i, 2) - 0.5) + 0.05 * Math.sin(t * 1.7 + ph * TAU), 0.12 * Math.sin(t * 1.3 + ph * TAU), 1, 1, (Math.floor(t * 1.2 + ph * 3) % 2) + 1, false, 1]; },
+        dance(i, t, s, n) { const beat = t * 2 + (i % 2) * 0.5;
+            return [slotX(i, n) + 0.06 * Math.sin(beat * Math.PI * 0.5), -0.3 + 0.1 * Math.abs(Math.sin(beat * Math.PI)), 0.22 * Math.sin(beat * Math.PI), 1, 1, (Math.floor(beat) % 2) + 1, Math.floor(beat / 4) % 2 === 1, 1]; },
+        hop(i, t, s) { const ph = hh(s, i, 3), v = 0.8 + 0.4 * hh(s, i, 6), dir = i % 2 === 0 ? -1 : 1;
+            let x = -1.3 + ((t * 0.12 * v + ph * 2.6) % 2.6); if (dir < 0) x = -x; const up = Math.abs(Math.sin(t * 2.6 * v + ph * TAU));
+            return [x, -0.45 + 0.22 * up + 0.3 * (hh(s, i, 2) - 0.5), 0, 1, 1, up > 0.3 ? 2 : 1, dir < 0, 1]; },
+        fly(i, t, s) { const ph = hh(s, i, 3), v = 0.8 + 0.5 * hh(s, i, 6), dir = i % 2 === 0 ? -1 : 1;
+            let x = -1.3 + ((t * 0.16 * v + ph * 2.6) % 2.6); if (dir < 0) x = -x;
+            return [x, hh(s, i, 2) * 1.3 - 0.5 + 0.12 * Math.sin(t * 1.3 * v + ph * TAU), 0.1 * Math.sin(t * 2 + ph * TAU), 1, 1, (Math.floor(t * 7 + ph * 7) % 2) + 1, false, 1]; },
+        burst(i, t, s) { const ph = hh(s, i, 3), v = 0.8 + 0.4 * hh(s, i, 6), P = 2.6 / v, tt = t + ph * P, cyc = Math.floor(tt / P), u = (tt % P) / P;
+            const rr = Math.sqrt(hh(s + cyc * 17, i, 1)) * 0.75, a = hh(s + cyc * 17, i, 2) * TAU, grow = 1 - Math.pow(1 - u, 3);
+            return [rr * Math.cos(a), rr * Math.sin(a), ph * TAU, u < 0.12 ? u / 0.12 : Math.pow(1 - (u - 0.12) / 0.88, 1.3), 0.25 + 0.75 * grow, 1, false, 1]; },
+        spin(i, t, s, n) { const ph = hh(s, i, 3), v = 0.8 + 0.4 * hh(s, i, 6), c = Math.cos(t * 3 * v + ph * TAU);
+            return [slotX(i, n), -0.2 + 0.4 * (hh(s, i, 2) - 0.5) + 0.04 * Math.sin(t * 1.5 + ph * TAU), 0.15 * Math.sin(t * 1.5 + ph * TAU), 1, 1, 1, c < 0, 0.35 + 0.65 * Math.abs(c)]; },
+    };
+    // Draws a projection on a canvas, looping, until the tab redraws.
+    function artPreview(cv, art, colors, st) {
+        const g = cv.getContext('2d');
+        const W = cv.width, H = cv.height, R = Math.min(W, H) * 0.46;
+        const cols = S.data.spotlights.cols, cell = 128;
+        const start = performance.now();
+        const step = () => {
+            const t = (performance.now() - start) / 1000 * (st.speed || 1);
+            g.fillStyle = '#15161d'; g.fillRect(0, 0, W, H);
+            const glow = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, R * 1.1);
+            const c0 = colors[0];
+            glow.addColorStop(0, `rgba(${c0[0]},${c0[1]},${c0[2]},0.16)`); glow.addColorStop(1, 'rgba(0,0,0,0)');
+            g.fillStyle = glow; g.fillRect(0, 0, W, H);
+            art.layers.forEach((L, li) => {
+                const fn = MOTIONS[L.motion] || MOTIONS.twinkle;
+                const sd = 4242 + (li + 1) * 101;
+                for (let i = 1; i <= L.count; i++) {
+                    const [x, y, rot, alpha, sc, frame, mirror, sx] = fn(i, t, sd, L.count);
+                    const rr = Math.hypot(x, y), fade = Math.max(0, Math.min(1, (1.08 - rr) / 0.3));
+                    const a = alpha * fade; if (a < 0.02) continue;
+                    const motif = L.motifs[Math.floor(hh(sd, i, 7) * L.motifs.length)];
+                    const cellIdx = motif[(frame - 1) % motif.length];
+                    const size = (L.size[0] + (L.size[1] - L.size[0]) * hh(sd, i, 4)) * R * sc;
+                    const col = colors[(i + li) % colors.length];
+                    const src = tinted(col); if (!src) continue;
+                    g.save();
+                    g.globalAlpha = a; g.globalCompositeOperation = 'lighter';
+                    g.translate(W / 2 + x * R, H / 2 - y * R); g.rotate(-rot); g.scale((mirror ? -1 : 1) * sx, 1);
+                    g.drawImage(src, (cellIdx % cols) * cell, Math.floor(cellIdx / cols) * cell, cell, cell, -size / 2, -size / 2, size, size);
+                    g.restore();
+                }
+            });
+            ART.timers.push(requestAnimationFrame(step));
+        };
+        const img = artImage();
+        if (img.complete && img.naturalWidth) step(); else img.addEventListener('load', step, { once: true });
+    }
+    function spotColors(h, st) {
+        if (st.rgb) return [st.rgb];
+        const p = h.palettes.find(x => x.name === st.palette) || h.palettes.slice().sort((a, b) => b.colors.length - a.colors.length)[0];
+        return p ? p.colors : [[255, 236, 200]];
+    }
+    function hexOf(c) { return '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join(''); }
+    // The settings of one spotlight: used to place one and to edit one.
+    function spotSettings(container, h, st, onChange) {
+        const SP = S.data.spotlights;
+        const mode = labeled(container, T('ui_spot_mode'));
+        help(mode.firstChild, T('ui_spot_mode_help'));
+        segment(mode, ['beam', 'projector'], st.mode, v => { st.mode = v; onChange(); }, v => T('ui_spot_mode_' + v));
+        if (st.mode === 'projector') {
+            const arts = SP.arts.filter(a => a.holidays.includes('*') || a.holidays.includes(h.name))
+                .sort((a, b) => (a.holidays.includes('*') ? 1 : 0) - (b.holidays.includes('*') ? 1 : 0));
+            if (!arts.some(a => a.name === st.art)) st.art = arts[0] && arts[0].name;
+            const ab = labeled(container, T('ui_spot_art'));
+            help(ab.firstChild, T('ui_spot_art_help'));
+            const grid = el('div', 'art-grid');
+            for (const a of arts) {
+                const card = el('button', 'art-card');
+                card.setAttribute('aria-pressed', a.name === st.art);
+                card.title = a.desc;
+                const cv = el('canvas'); cv.width = 168; cv.height = 112;
+                card.appendChild(cv);
+                card.appendChild(el('span', '', a.label));
+                card.addEventListener('click', () => { st.art = a.name; onChange(); });
+                grid.appendChild(card);
+                artPreview(cv, a, spotColors(h, st), st);
+            }
+            ab.appendChild(grid);
+        }
+        // Color: a palette of the holiday, or one color of your own.
+        const cb = labeled(container, T('ui_spot_color'));
+        const sw = el('div', 'swatches');
+        // No palette yet: the holiday's richest one (most colors), as the game does.
+        if (!st.rgb && (!st.palette || !h.palettes.some(p => p.name === st.palette))) {
+            const vivid = p => p.colors.reduce((s, c) => s + Math.max(...c) - Math.min(...c), 0);
+            const rich = h.palettes.slice().sort((a, b) => (b.colors.length - a.colors.length) || (vivid(b) - vivid(a)) || a.name.localeCompare(b.name))[0];
+            st.palette = rich && rich.name;
+        }
+        for (const p of h.palettes) {
+            const b = el('button', 'sw');
+            for (const c of p.colors) { const i = el('i'); i.style.background = rgb(c); i.style.color = rgb(c); b.appendChild(i); }
+            b.appendChild(document.createTextNode(p.name.replace(/_/g, ' ')));
+            b.setAttribute('aria-pressed', !st.rgb && st.palette === p.name);
+            b.addEventListener('click', () => { st.palette = p.name; st.rgb = null; onChange(); });
+            sw.appendChild(b);
+        }
+        const custom = el('label', 'sw custom');
+        const pick = el('input'); pick.type = 'color'; pick.value = st.rgb ? hexOf(st.rgb) : '#ffd9a0';
+        pick.addEventListener('change', () => { const v = pick.value; st.rgb = [parseInt(v.slice(1, 3), 16), parseInt(v.slice(3, 5), 16), parseInt(v.slice(5, 7), 16)]; onChange(); });
+        custom.appendChild(pick); custom.appendChild(document.createTextNode(T('ui_spot_custom')));
+        custom.setAttribute('aria-pressed', !!st.rgb);
+        sw.appendChild(custom);
+        cb.appendChild(sw);
+        const cyc = el('div', 'row');
+        cyc.appendChild(el('span', '', T('ui_spot_cycle')));
+        const cs = el('button', 'switch'); cs.setAttribute('role', 'switch'); cs.setAttribute('aria-checked', !!st.cycle);
+        cs.addEventListener('click', () => { st.cycle = !st.cycle; onChange(); });
+        cyc.appendChild(cs); help(cyc, T('ui_spot_cycle_help'));
+        container.appendChild(cyc);
+        // Beam, brightness, size and speed.
+        segment(labeled(container, T('ui_spot_beam')), SP.beams, st.beam, v => { st.beam = v; onChange(); }, v => T('spot_beam_' + v));
+        if (st.mode !== 'projector') {
+            // A tree: lit from the side so the whole tree shows. Aiming at a
+            // tree you placed turns this on by itself.
+            const tr = el('div', 'row');
+            tr.appendChild(el('span', '', T('ui_spot_tree')));
+            const ts = el('button', 'switch'); ts.setAttribute('role', 'switch'); ts.setAttribute('aria-checked', !!st.tree);
+            ts.addEventListener('click', () => { st.tree = !st.tree; if (st.tree && !st.span) st.span = SP.treeSpans.medium; onChange(); });
+            tr.appendChild(ts); help(tr, T('ui_spot_tree_help'));
+            container.appendChild(tr);
+            if (st.tree) {
+                const names = SP.treeSpanOrder;
+                const cur = names.reduce((a, n) => Math.abs(SP.treeSpans[n] - (st.span || 0)) < Math.abs(SP.treeSpans[a] - (st.span || 0)) ? n : a, names[1]);
+                segment(labeled(container, T('ui_spot_tree_size')), names, cur, v => { st.span = SP.treeSpans[v]; onChange(); }, v => T('spot_tree_' + v));
+            }
+        }
+        const slider = (label, key, min, max, step, fmt) => {
+            const box = labeled(container, `${label}: ${fmt(st[key])}`);
+            const r = el('input'); r.type = 'range'; r.min = min; r.max = max; r.step = step; r.value = st[key];
+            r.addEventListener('input', () => { st[key] = parseFloat(r.value); box.firstChild.textContent = `${label}: ${fmt(st[key])}`; });
+            box.appendChild(r);
+        };
+        const pct = v => `${Math.round(v * 100)}%`;
+        slider(T('ui_spot_bright'), 'bright', 0.2, 3, 0.05, pct);
+        if (st.mode === 'projector') {
+            slider(T('ui_spot_scale'), 'scale', 0.5, 2, 0.05, pct);
+            slider(T('ui_spot_speed'), 'speed', 0.25, 3, 0.05, pct);
+        }
+        // Pattern and channel: a show overrides the pattern on its channel.
+        segment(labeled(container, T('ui_pattern')), SP.patterns, st.pattern, v => { st.pattern = v; onChange(); }, v => T('pattern_' + v));
+        container.lastChild.lastChild.classList.add('wrap');
+        segment(labeled(container, T('ui_channel')), [1, 2, 3, 4], st.channel, v => { st.channel = v; onChange(); });
+        const hr = el('div', 'row');
+        hr.appendChild(el('span', '', T('ui_spot_hidden')));
+        const hs = el('button', 'switch'); hs.setAttribute('role', 'switch'); hs.setAttribute('aria-checked', !!st.hidden);
+        hs.addEventListener('click', () => { st.hidden = !st.hidden; onChange(); });
+        hr.appendChild(hs); help(hr, T('ui_spot_hidden_help'));
+        container.appendChild(hr);
+    }
+    // What is sent: forEdit sends false to clear a color, palette or flag.
+    function spotOut(st, forEdit) {
+        const o = { mode: st.mode, beam: st.beam, bright: st.bright, pattern: st.pattern, channel: st.channel, art: st.art, scale: st.scale, speed: st.speed };
+        o.cycle = st.cycle ? true : (forEdit ? false : undefined);
+        o.tree = st.tree ? true : (forEdit ? false : undefined);
+        if (st.tree && st.span) o.span = st.span;
+        o.hidden = st.hidden ? true : (forEdit ? false : undefined);
+        if (st.rgb) { o.rgb = st.rgb; if (forEdit) o.palette = false; }
+        else { o.palette = st.palette; if (forEdit) o.rgb = false; }
+        return o;
+    }
+    function renderSpotlights(body) {
+        const d = S.data, SP = d.spotlights;
+        holidayChips(body, render);
+        const h = holiday();
+        if (!SP || !SP.enabled) { body.appendChild(el('div', 'note', T('ui_spot_disabled'))); return; }
+        if (!SP.fixtures.length) { body.appendChild(el('div', 'note', T('ui_spot_none'))); return; }
+        if (!SP.fixtures.some(f => f.name === S.spot.fixture)) S.spot.fixture = SP.fixtures[0].name;
+        const box = section(body, T('ui_spot_fixtures'), T('ui_spot_help') + ' ' + T('ui_hover_hint'));
+        const list = el('div', 'list');
+        for (const f of SP.fixtures) {
+            const it = el('div', 'item' + (f.name === S.spot.fixture ? ' active' : ''));
+            it.appendChild(propThumb(f.model));
+            const main = el('div', 'main');
+            main.appendChild(el('div', 't', f.label));
+            main.appendChild(el('div', 'd', f.desc));
+            it.appendChild(main);
+            it.addEventListener('click', () => { S.spot.fixture = f.name; render(); });
+            hoverable(it, 'prop', h.name, f.model);
+            list.appendChild(it);
+        }
+        box.appendChild(list);
+        spotSettings(body, h, S.spot, () => render());
+        const row = el('div', 'row');
+        const go = el('button', 'btn primary', T('ui_spot_place'));
+        go.disabled = !d.who.decorator;
+        go.addEventListener('click', () => post('placeSpot', { holiday: h.name, fixture: S.spot.fixture, spot: spotOut(S.spot, false) }));
+        row.appendChild(go);
+        body.appendChild(row);
+        body.appendChild(el('div', 'note', T('ui_spot_place_hint').replace('%{max}', Math.round(SP.maxThrow))));
+    }
+
+    // ---- Sleigh & ball drop ----
+    function switchRow(container, label, value, onFlip, helpText) {
+        const r = el('div', 'row');
+        r.appendChild(el('span', '', label));
+        const sw = el('button', 'switch'); sw.setAttribute('role', 'switch'); sw.setAttribute('aria-checked', !!value);
+        sw.addEventListener('click', () => onFlip(!value));
+        r.appendChild(sw);
+        if (helpText) help(r, helpText);
+        container.appendChild(r);
+    }
+    function rangeRow(container, label, st, key, min, max, step, fmt) {
+        const box = labeled(container, `${label}: ${fmt(st[key])}`);
+        const r = el('input'); r.type = 'range'; r.min = min; r.max = max; r.step = step; r.value = st[key];
+        r.addEventListener('input', () => { st[key] = parseFloat(r.value); box.firstChild.textContent = `${label}: ${fmt(st[key])}`; });
+        box.appendChild(r);
+    }
+    // A team: how many pairs, their coats, what they do while parked, the
+    // red nose, rides, presents.
+    function sleighSettings(container, st, onChange) {
+        const X = S.data.extras.sleigh;
+        const nums = []; for (let i = 1; i <= X.maxPairs; i++) nums.push(i);
+        segment(labeled(container, T('ui_sl_pairs')), nums, st.pairs, v => { st.pairs = v; onChange(); }, v => `${v * 2}`);
+        segment(labeled(container, T('ui_sl_coat')), X.coats, st.coat, v => { st.coat = v; onChange(); }, v => T('sl_coat_' + v));
+        segment(labeled(container, T('ui_sl_pose')), X.poses, st.pose, v => { st.pose = v; onChange(); }, v => T('sl_pose_' + v));
+        switchRow(container, T('ui_sl_nose'), st.nose, v => { st.nose = v; onChange(); });
+        switchRow(container, T('ui_sl_presents'), st.presents, v => { st.presents = v; onChange(); });
+        switchRow(container, T('ui_sl_ride'), st.ride, v => { st.ride = v; onChange(); }, X.ride ? T('ui_sl_ride_help') : T('ui_sl_ride_off_server'));
+    }
+    // A ball: its size, how long it takes to drop, its colors and pattern;
+    // with the pole's height when it is being placed.
+    function ballSettings(container, st, onChange, withHeight) {
+        const X = S.data.extras.balldrop;
+        if (withHeight) rangeRow(container, T('ui_bd_height'), st, 'height', X.minHeight, X.maxHeight, 1, v => `${v} m`);
+        rangeRow(container, T('ui_bd_ball'), st, 'ball', 0.8, 6, 0.1, v => `${Number(v).toFixed(1)} m`);
+        rangeRow(container, T('ui_bd_seconds'), st, 'seconds', 10, 120, 5, v => `${v} s`);
+        segment(labeled(container, T('ui_bd_pattern')), X.patterns, st.pattern, v => { st.pattern = v; onChange(); }, v => T('bd_pattern_' + v));
+        const h = S.data.holidays.find(x => x.name === X.holiday);
+        if (h && st.pattern !== 'rainbow') {
+            const cb = labeled(container, T('ui_bd_colors'));
+            const sw = el('div', 'swatches');
+            const auto = el('button', 'sw', T('ui_bd_colors_auto'));
+            auto.setAttribute('aria-pressed', !st.palette);
+            auto.addEventListener('click', () => { st.palette = null; onChange(); });
+            sw.appendChild(auto);
+            for (const p of h.palettes) {
+                const b = el('button', 'sw');
+                for (const c of p.colors) { const i = el('i'); i.style.background = rgb(c); i.style.color = rgb(c); b.appendChild(i); }
+                b.appendChild(document.createTextNode(p.name.replace(/_/g, ' ')));
+                b.setAttribute('aria-pressed', st.palette === p.name);
+                b.addEventListener('click', () => { st.palette = p.name; onChange(); });
+                sw.appendChild(b);
+            }
+            cb.appendChild(sw);
+        }
+    }
+    function ballOut(st, forEdit) {
+        const o = { ball: st.ball, seconds: st.seconds, pattern: st.pattern };
+        if (st.palette) o.palette = st.palette; else if (forEdit) o.palette = false;
+        return o;
+    }
+    function renderExtras(body) {
+        const d = S.data, X = d.extras;
+        // The ball drop.
+        const bbox = section(body, T('ui_bd_title'), T('ui_bd_help'));
+        if (!X.balldrop.enabled) bbox.appendChild(el('div', 'note', T('ui_bd_disabled')));
+        else {
+            ballSettings(bbox, S.ball, () => render(), true);
+            const row = el('div', 'row');
+            const go = el('button', 'btn primary', T('ui_bd_place'));
+            go.disabled = !d.who.decorator;
+            go.title = T('ui_tray_hint_shape');
+            go.addEventListener('click', () => post('placeBallDrop', { height: S.ball.height, drop: ballOut(S.ball, false) }));
+            row.appendChild(go);
+            bbox.appendChild(row);
+            bbox.appendChild(el('div', 'note', T('ui_bd_how').replace('%{seconds}', S.ball.seconds)));
+            if (X.balldrop.here) bbox.appendChild(el('div', 'note', T('ui_bd_here').replace('%{count}', X.balldrop.here).replace('%{group}', d.settings.group)));
+        }
+        // Santa's sleigh.
+        const sbox = section(body, T('ui_sl_title'), T('ui_sl_help'));
+        if (!X.sleigh.enabled) { sbox.appendChild(el('div', 'note', T('ui_sl_disabled'))); return; }
+        if (!X.sleigh.available) { sbox.appendChild(el('div', 'note', T('ui_sl_unavailable'))); return; }
+        sleighSettings(sbox, S.sleigh, () => render());
+        const row = el('div', 'row');
+        const go = el('button', 'btn primary', T('ui_sl_place'));
+        go.disabled = !d.who.decorator;
+        go.title = T('ui_tray_hint_prop');
+        go.addEventListener('click', () => post('placeSleigh', { sleigh: Object.assign({}, S.sleigh) }));
+        row.appendChild(go);
+        sbox.appendChild(row);
+        // Santa's flight from this location.
+        const here = X.sleigh.here || { count: 0 };
+        const fbox = section(body, T('ui_sl_fly'), T('ui_sl_fly_help'));
+        if (!X.sleigh.flight) fbox.appendChild(el('div', 'note', T('ui_sl_flight_off')));
+        else {
+            fbox.appendChild(el('div', 'note', here.count ? T('ui_sl_here').replace('%{count}', here.count).replace('%{group}', d.settings.group)
+                : T('ui_sl_none_here').replace('%{group}', d.settings.group)));
+            const fr = el('div', 'row');
+            const fly = el('button', 'btn primary', T('ui_sl_fly'));
+            fly.disabled = !here.count;
+            fly.addEventListener('click', () => { post('sleighFly'); });
+            const land = el('button', 'btn', T('ui_sl_land'));
+            land.disabled = !here.flying;
+            land.addEventListener('click', () => { post('sleighLand'); });
+            fr.appendChild(fly); fr.appendChild(land);
+            fbox.appendChild(fr);
+            if (here.flying) fbox.appendChild(el('div', 'note', T('ui_sl_flying')));
+        }
+    }
+
     // ---- Fireworks ----
     // Pick a launcher, load it, color it, give it a channel and a height,
     // and place it like a prop. Preview fires one in front of you.
@@ -606,7 +971,7 @@
         const d = S.data;
         // Point and click first: aim at the thing itself.
         const pick = el('button', 'btn primary', T('ui_pick'));
-        pick.disabled = !d.who.decorator && !d.who.admin;
+        pick.disabled = !d.who.decorator && !d.who.admin && !(d.floats && d.floats.ownersMay);
         pick.addEventListener('click', () => post('pick'));
         body.appendChild(pick);
         body.appendChild(el('div', 'note', T('ui_pick_help')));
@@ -660,8 +1025,9 @@
             main.appendChild(el('div', 't', `${n.label}  ·  ${n.dist} m`));
             main.appendChild(el('div', 'd', `${n.holidayLabel} · ${n.group} · ${T('ui_by')} ${n.by}${n.kind === 'lights' ? ` · ${n.palette} · ${T('pattern_' + n.pattern)} · ${T('ui_channel')} ${n.channel}` : ''}`));
             it.appendChild(main);
-            const editable = can.admin || (can.decorator && n.mine);
-            if (editable && groups.length > 1) {
+            const ownersMay = !!(S.data.floats && S.data.floats.ownersMay);
+            const editable = can.admin || ((can.decorator || (n.float && ownersMay)) && n.mine);
+            if (editable && groups.length > 1 && !n.float) {   // a float's decorations stay on their float
                 // Move it to another group without leaving the list.
                 const sel = el('select', 'input small'); sel.title = T('ui_change_group');
                 for (const g of groups) { const o = el('option', '', g); o.value = g; o.selected = g === n.group; sel.appendChild(o); }
@@ -678,10 +1044,93 @@
                     it.appendChild(set);
                 }
             }
+            if (n.spot && editable) {
+                const aim = el('button', 'btn small', T('ui_spot_aim')); aim.addEventListener('click', () => post('aimSpot', { id: n.id }));
+                it.appendChild(aim);
+                const set = el('button', 'btn small', T('ui_spot_settings') + '…');
+                set.addEventListener('click', () => { S.editing = S.editing === n.id ? null : n.id; renderNearby(list, nearby); });
+                it.appendChild(set);
+                if (!n.spot.target) main.lastChild.textContent += ` · ${T('ui_spot_unaimed')}`;
+            }
+            if (n.isSleigh && editable) {
+                // A sleigh's team: give it one, change it, or take it away.
+                const set = el('button', 'btn small', (n.sleigh ? T('ui_sl_team') : T('ui_sl_add_team')) + '…');
+                set.addEventListener('click', () => { S.editing = S.editing === n.id ? null : n.id; renderNearby(list, nearby); });
+                it.appendChild(set);
+                if (n.sleigh) main.lastChild.textContent += ` · ${n.sleigh.pairs * 2} ${T('ui_sl_team').toLowerCase()} · ${T('sl_coat_' + n.sleigh.coat)}`;
+            }
+            if (n.drop) {
+                main.lastChild.textContent += ` · ${T('bd_pattern_' + n.drop.pattern)} · ${n.drop.seconds} s`;
+                const test = el('button', 'btn small', T('ui_bd_test')); test.title = T('ui_bd_test_help');
+                test.addEventListener('click', () => post('testBallDrop', { id: n.id }));
+                it.appendChild(test);
+                if (editable) {
+                    const set = el('button', 'btn small', T('ui_bd_settings') + '…');
+                    set.addEventListener('click', () => { S.editing = S.editing === n.id ? null : n.id; renderNearby(list, nearby); });
+                    it.appendChild(set);
+                }
+            }
             const mv = el('button', 'btn small', T('ui_move')); mv.disabled = !editable; mv.addEventListener('click', () => post('move', { id: n.id }));
             const rm = el('button', 'btn small danger', T('ui_remove')); rm.disabled = !editable; rm.addEventListener('click', () => post('remove', { id: n.id }));
+            if (!editable) { mv.title = rm.title = T('ui_not_yours_tip').replace('%{name}', n.by); }
             it.appendChild(mv); it.appendChild(rm);
             list.appendChild(it);
+            if (n.spot && S.editing === n.id) {
+                const h = S.data.holidays.find(x => x.name === n.holiday);
+                if (h) {
+                    const st = Object.assign({}, n.spot);
+                    const ed = el('div', 'item editor wrap');
+                    const inner = el('div', 'main');
+                    const redraw = () => { inner.innerHTML = ''; stopArtPreviews(); spotSettings(inner, h, st, redraw); };
+                    redraw();
+                    ed.appendChild(inner);
+                    const save = el('button', 'btn small primary', T('ui_save'));
+                    save.addEventListener('click', () => {
+                        post('restyle', { id: n.id, changes: { spot: spotOut(st, true) } });
+                        S.editing = null;
+                        setTimeout(() => post('refreshNearby'), 400);
+                    });
+                    ed.appendChild(save);
+                    list.appendChild(ed);
+                }
+            }
+            if (n.isSleigh && S.editing === n.id) {
+                const st = Object.assign({}, S.sleigh, n.sleigh || {});
+                const ed = el('div', 'item editor wrap');
+                const inner = el('div', 'main');
+                const redraw = () => { inner.innerHTML = ''; sleighSettings(inner, st, redraw); };
+                redraw();
+                ed.appendChild(inner);
+                const save = el('button', 'btn small primary', T('ui_save'));
+                save.addEventListener('click', () => {
+                    post('restyle', { id: n.id, changes: { sleigh: { pairs: st.pairs, coat: st.coat, pose: st.pose, nose: !!st.nose, ride: !!st.ride, presents: !!st.presents } } });
+                    S.editing = null;
+                    setTimeout(() => post('refreshNearby'), 400);
+                });
+                ed.appendChild(save);
+                if (n.sleigh) {
+                    const off = el('button', 'btn small danger', T('ui_sl_remove_team'));
+                    off.addEventListener('click', () => { post('restyle', { id: n.id, changes: { sleigh: false } }); S.editing = null; setTimeout(() => post('refreshNearby'), 400); });
+                    ed.appendChild(off);
+                }
+                list.appendChild(ed);
+            }
+            if (n.drop && S.editing === n.id) {
+                const st = Object.assign({}, n.drop, { palette: n.drop.palette || null });
+                const ed = el('div', 'item editor wrap');
+                const inner = el('div', 'main');
+                const redraw = () => { inner.innerHTML = ''; ballSettings(inner, st, redraw, false); };
+                redraw();
+                ed.appendChild(inner);
+                const save = el('button', 'btn small primary', T('ui_save'));
+                save.addEventListener('click', () => {
+                    post('restyle', { id: n.id, changes: { drop: ballOut(st, true) } });
+                    S.editing = null;
+                    setTimeout(() => post('refreshNearby'), 400);
+                });
+                ed.appendChild(save);
+                list.appendChild(ed);
+            }
             if (n.fw && S.editing === n.id) {
                 // A placed launcher's settings, edited in place.
                 const h = S.data.holidays.find(x => x.name === n.holiday);
@@ -723,8 +1172,16 @@
         live.appendChild(gl);
         renderLiveGroups(gl, d.groups);
 
-        // Save the current location as a layout.
+        // Move everything around me into one location: how a city
+        // decorated under one name gets a location per building.
+        if (can) renderClaim(body);
+
+        // Save the current location as a layout. Say which location that
+        // is, and warn when it is spread over several places.
         const sv = section(body, T('ui_place_save'), T('ui_place_save_help'));
+        const cur = (d.groups || []).find(g => g.name === d.settings.group);
+        sv.appendChild(el('div', 'note', T('ui_place_saving').replace('%{group}', d.settings.group).replace('%{count}', cur ? cur.count : 0)));
+        if (cur && cur.areas > 1) sv.appendChild(el('div', 'note warn', T('ui_place_spread').replace('%{group}', cur.name).replace('%{areas}', cur.areas)));
         const row = el('div', 'row');
         const nm = el('input', 'input grow'); nm.type = 'text'; nm.placeholder = T('ui_place_name'); nm.maxLength = 48; nm.value = d.settings.group;
         row.appendChild(nm);
@@ -756,6 +1213,51 @@
         sl.appendChild(pl);
         renderPresets(pl, d.presets);
     }
+    function renderClaim(body) {
+        const d = S.data;
+        const sec = section(body, T('ui_claim'), T('ui_claim_help'));
+        const row = el('div', 'row');
+        const into = el('input', 'input grow'); into.type = 'text'; into.maxLength = 32;
+        into.placeholder = T('ui_group_new'); into.value = d.settings.group;
+        into.title = T('ui_claim_into');
+        row.appendChild(into);
+        sec.appendChild(row);
+        const row2 = el('div', 'row');
+        // Distances up to the server's reach; admins can sweep a whole lot.
+        const reach = Math.round(d.reach || 60);
+        const steps = [10, 20, 30, 45, 60, 90, 150, 250].filter(m => m < reach || (d.who.admin && m <= 250));
+        if (!steps.includes(reach)) steps.push(reach);
+        steps.sort((a, b) => a - b);
+        const rad = el('select', 'input small'); rad.title = T('ui_claim_within');
+        for (const m of steps) { const o = el('option', '', `${T('ui_claim_within')} ${m} m`); o.value = m; o.selected = m === Math.min(30, reach); rad.appendChild(o); }
+        row2.appendChild(rad);
+        const from = el('select', 'input small'); from.title = T('ui_claim_from');
+        const any = el('option', '', T('ui_claim_any')); any.value = ''; from.appendChild(any);
+        for (const g of d.groups || []) { const o = el('option', '', `${T('ui_claim_from')} ${g.name}`); o.value = g.name; from.appendChild(o); }
+        row2.appendChild(from);
+        const go = el('button', 'btn small primary', T('ui_claim_go'));
+        let timer = null;
+        const disarm = () => { delete go.dataset.armed; go.textContent = T('ui_claim_go'); go.classList.remove('danger'); };
+        go.addEventListener('click', () => {
+            const name = into.value.trim().replace(/\s+/g, ' ');
+            if (!name) return;
+            if (go.dataset.armed) {
+                clearTimeout(timer); disarm();
+                post('claim', { group: name, radius: Number(rad.value), from: from.value });
+                d.settings.group = name;
+                // Redraw once the server has moved them: new counts, the
+                // save box on the new location.
+                setTimeout(() => render(), 900);
+                return;
+            }
+            go.dataset.armed = '1';
+            go.classList.add('danger');
+            go.textContent = T('ui_claim_arm').replace('%{radius}', rad.value).replace('%{group}', name);
+            timer = setTimeout(disarm, 6000);
+        });
+        row2.appendChild(go);
+        sec.appendChild(row2);
+    }
     function renderLiveGroups(list, groups) {
         list.innerHTML = '';
         const d = S.data;
@@ -765,6 +1267,7 @@
             const main = el('div', 'main');
             main.appendChild(el('div', 't', g.name));
             main.appendChild(el('div', 'd', `${g.props} ${T('ui_props')} · ${g.lights} ${T('ui_lights')} · ${g.dist} m${g.running ? ` · ${T('ui_group_show_on')}` : ''}`));
+            if (g.areas > 1) main.appendChild(el('div', 'd warn', T('ui_group_spread').replace('%{areas}', g.areas)));
             // One chip per holiday set at this location; admins clear a set from it.
             const sets = el('div', 'chips sets');
             for (const h of g.holidays || []) {
@@ -830,6 +1333,7 @@
             const main = el('div', 'main');
             main.appendChild(el('div', 't', `${p.name}${p.dist !== null && p.dist !== undefined ? `  ·  ${p.dist} m` : ''}`));
             if (p.note) main.appendChild(el('div', 'desc', p.note));
+            if (p.areas > 1) main.appendChild(el('div', 'd warn', T('ui_group_spread').replace('%{areas}', p.areas)));
             const hs = (p.holidays || []).map(holidayLabel).join(', ');
             main.appendChild(el('div', 'd', `${p.count} ${T('ui_place_count')} · ${hs} · ${T('ui_group')} ${p.group} · ${T('ui_place_saved')} ${when(p.savedAt)} ${T('ui_by')} ${p.byName} · ${p.checkedAt ? T('ui_place_checked') + ' ' + when(p.checkedAt) : T('ui_place_never_checked')}`));
             it.appendChild(main);
@@ -860,7 +1364,178 @@
                 });
                 acts.appendChild(rn);
                 const del = el('button', 'btn small danger', T('ui_place_delete'));
-                del.addEventListener('click', () => { if (del.dataset.armed) post('presetDelete', { name: p.name }); else { del.dataset.armed = '1'; del.textContent = T('ui_place_delete') + '?'; } });
+                del.title = T('ui_place_delete_help');
+                del.addEventListener('click', () => { if (del.dataset.armed) post('presetDelete', { name: p.name }); else { del.dataset.armed = '1'; del.textContent = T('ui_place_delete_arm'); } });
+                acts.appendChild(del);
+            }
+            it.appendChild(acts);
+            list.appendChild(it);
+        }
+    }
+
+    // ---- Vehicles (floats) ----
+    // A float is a location that rides on a vehicle. Make one from the
+    // vehicle you are at, decorate it with the other tabs, put it on more
+    // vehicles (this one, a plate, a whole model) or on a moving object.
+    function bindingLabel(b) {
+        if (b.kind === 'plate') return `${T('ui_fl_kind_plate')} ${b.plate}`;
+        if (b.kind === 'model') return `${T('ui_fl_kind_model')}: ${b.modelName || b.model}`;
+        if (b.kind === 'object') return `${T('ui_fl_kind_object')}: ${b.modelName || b.model}`;
+        return `${T('ui_fl_kind_vehicle')} ${b.plate || ''}${b.session ? ' (' + T('ui_fl_session') + ')' : ''}`;
+    }
+    function renderVehicles(body) {
+        const d = S.data;
+        const F = d.floats || {};
+        body.appendChild(el('div', 'note experimental', T('ui_fl_experimental')));
+        if (!F.enabled) { body.appendChild(el('div', 'note', T('ui_fl_off'))); return; }
+        const can = d.who.decorator || d.who.admin;
+        const owner = !can && F.ownersMay;
+        S.fl = S.fl || { kind: 'vehicle', float: null, plate: '' };
+        const st = S.fl;
+        body.appendChild(el('div', 'note', T('ui_fl_help')));
+        if (owner) body.appendChild(el('div', 'note', T('ui_fl_owner_note')));
+
+        if (F.editing) {
+            const bar = el('div', 'item active');
+            const main = el('div', 'main');
+            main.appendChild(el('div', 't', T('ui_fl_editing').replace('%{name}', F.editing.name)));
+            main.appendChild(el('div', 'd', T('ui_fl_editing_help')));
+            bar.appendChild(main);
+            const done = el('button', 'btn small primary', T('ui_fl_done'));
+            done.addEventListener('click', () => post('floatDone'));
+            bar.appendChild(done);
+            body.appendChild(bar);
+        }
+
+        // The vehicle the player is in or next to.
+        const hb = section(body, T('ui_fl_here'));
+        const h = F.here;
+        if (!h) {
+            hb.appendChild(el('div', 'note', T('ui_fl_none_here')));
+        } else {
+            const it = el('div', 'item');
+            const main = el('div', 'main');
+            main.appendChild(el('div', 't', `${h.label}  ·  ${T('ui_fl_plate')} ${h.plate || '-'}`));
+            main.appendChild(el('div', 'd', `${h.inside ? T('ui_fl_inside') : T('ui_fl_nearby')} · ${T('ui_fl_wearing')}: ${h.wearing || T('ui_fl_wearing_none')}`));
+            // A vehicle only this player's game has (a display car a script
+            // parks on each screen): it carries a float by its spot.
+            if (h.localOnly) main.appendChild(el('div', 'd warn', T('ui_fl_local_only')));
+            it.appendChild(main);
+            if (h.wearing && (can || owner)) {
+                const ed = el('button', 'btn small primary', T('ui_fl_edit'));
+                ed.disabled = !!(F.editing && F.editing.name === h.wearing);
+                ed.addEventListener('click', () => post('floatEdit', { name: h.wearing }));
+                it.appendChild(ed);
+                const off = el('button', 'btn small', T('ui_fl_take_off'));
+                off.addEventListener('click', () => post('floatClear'));
+                it.appendChild(off);
+            }
+            hb.appendChild(it);
+
+            if (can || owner) {
+                const mk = section(body, T('ui_fl_new'), T('ui_fl_new_help'));
+                const row = el('div', 'row');
+                const nm = el('input', 'input grow'); nm.type = 'text'; nm.placeholder = T('ui_fl_name'); nm.maxLength = 32;
+                const go = el('button', 'btn small primary', T('ui_fl_create'));
+                const create = () => { if (nm.value.trim()) post('floatCreate', { name: nm.value.trim() }); };
+                go.addEventListener('click', create);
+                nm.addEventListener('keydown', ev => { if (ev.key === 'Enter') create(); });
+                row.appendChild(nm); row.appendChild(go);
+                mk.appendChild(row);
+
+                const floats = F.floats || [];
+                if (floats.length) {
+                    const pu = section(body, T('ui_fl_put_on'), T('ui_fl_put_on_help'));
+                    if (!st.float || !floats.some(f => f.name === st.float)) st.float = floats[0].name;
+                    const sel = el('select', 'input');
+                    for (const f of floats) { const o = el('option', '', f.name); o.value = f.name; o.selected = st.float === f.name; sel.appendChild(o); }
+                    sel.addEventListener('change', () => { st.float = sel.value; });
+                    labeled(pu, T('ui_fl_pick_float')).appendChild(sel);
+                    // A vehicle only in this game is bound by its spot: no plate, no fleet.
+                    const kinds = (can && !h.localOnly) ? ['vehicle', 'plate', 'model'] : ['vehicle'];
+                    if (!kinds.includes(st.kind)) st.kind = 'vehicle';
+                    segment(pu, kinds, st.kind, v => { st.kind = v; render(); }, v => T('ui_fl_kind_' + v));
+                    let plateIn = null;
+                    if (can && F.setPlates && st.kind !== 'model' && !h.localOnly) {
+                        const pb = labeled(pu, T('ui_fl_new_plate'));
+                        help(pb.firstChild, T('ui_fl_new_plate_help'));
+                        plateIn = el('input', 'input'); plateIn.type = 'text'; plateIn.maxLength = 8; plateIn.placeholder = h.plate || ''; plateIn.value = st.plate || '';
+                        plateIn.addEventListener('input', () => { plateIn.value = plateIn.value.toUpperCase().replace(/[^A-Z0-9 ]/g, ''); st.plate = plateIn.value; });
+                        pb.appendChild(plateIn);
+                    }
+                    const ap = el('button', 'btn small primary', T('ui_fl_apply'));
+                    ap.addEventListener('click', () => { post('floatBind', { name: st.float, kind: st.kind, plate: plateIn ? plateIn.value.trim() : '' }); st.plate = ''; });
+                    pu.appendChild(ap);
+                    pu.appendChild(el('div', 'note', F.saveBindings ? T('ui_fl_saved_note') : T('ui_fl_unsaved_note')));
+                }
+            }
+        }
+
+        // A float on an object in the world (decorators).
+        if (can) {
+            const ob = section(body, T('ui_fl_object'), T('ui_fl_object_help'));
+            const row = el('div', 'row');
+            const nm = el('input', 'input grow'); nm.type = 'text'; nm.placeholder = T('ui_fl_name'); nm.maxLength = 32;
+            const mk = el('button', 'btn small', T('ui_fl_object_new'));
+            mk.addEventListener('click', () => { if (nm.value.trim()) post('floatObject', { what: 'create', name: nm.value.trim() }); });
+            row.appendChild(nm); row.appendChild(mk);
+            ob.appendChild(row);
+        }
+
+        // Every float, and what wears it.
+        const fl = section(body, T('ui_fl_floats'));
+        const refresh = el('button', 'btn small', T('ui_refresh'));
+        refresh.addEventListener('click', () => post('floatRefresh'));
+        fl.firstChild.appendChild(refresh);
+        fl.appendChild(el('div', 'note', T('ui_fl_drawn').replace('%{count}', F.drawn || 0)));
+        const list = el('div', 'list');
+        fl.appendChild(list);
+        const floats = F.floats || [];
+        if (!floats.length) list.appendChild(el('div', 'note', T('ui_fl_floats_none')));
+        for (const f of floats) {
+            const it = el('div', 'item preset' + (F.editing && F.editing.name === f.name ? ' active' : ''));
+            const main = el('div', 'main');
+            main.appendChild(el('div', 't', `${f.name}${f.modelName ? '  ·  ' + f.modelName : ''}`));
+            main.appendChild(el('div', 'd', `${f.items} ${T('ui_fl_items')} · ${f.bulbs} ${T('ui_fl_bulbs')} · ${T('ui_fl_wearing_count').replace('%{count}', f.wearing || 0)} · ${T('ui_by')} ${f.byName || '?'}`));
+            const binds = (F.bindings || []).filter(b => b.float === f.name);
+            const chips = el('div', 'chips sets');
+            if (!binds.length) chips.appendChild(el('span', 'note', T('ui_fl_bindings_none')));
+            for (const b of binds) {
+                const label = bindingLabel(b);
+                const c = el(can ? 'button' : 'span', 'chip small', label);
+                if (can) {
+                    c.title = T('ui_fl_unbind');
+                    c.addEventListener('click', () => {
+                        if (c.dataset.armed) { post('floatUnbind', { id: b.id, restore: false }); c.disabled = true; }
+                        else { c.dataset.armed = '1'; c.textContent = `${T('ui_fl_unbind')} ${label}?`; c.classList.add('danger'); }
+                    });
+                }
+                chips.appendChild(c);
+                if (can && b.oldPlate) {
+                    const r = el('button', 'chip small', T('ui_fl_restore_plate').replace('%{plate}', b.oldPlate));
+                    r.addEventListener('click', () => { post('floatUnbind', { id: b.id, restore: true }); r.disabled = true; });
+                    chips.appendChild(r);
+                }
+            }
+            main.appendChild(chips);
+            it.appendChild(main);
+            const acts = el('div', 'acts');
+            if (can) {
+                if (binds.some(b => b.kind === 'object')) {
+                    const oe = el('button', 'btn small', T('ui_fl_object_edit'));
+                    oe.addEventListener('click', () => post('floatObject', { what: 'edit', name: f.name }));
+                    acts.appendChild(oe);
+                }
+                const ob = el('button', 'btn small', T('ui_fl_object_bind'));
+                ob.addEventListener('click', () => post('floatObject', { what: 'bind', name: f.name }));
+                acts.appendChild(ob);
+            }
+            if (can || (owner && f.owner)) {
+                const del = el('button', 'btn small danger', T('ui_fl_delete'));
+                del.addEventListener('click', () => {
+                    if (del.dataset.armed) { post('floatDelete', { name: f.name }); del.disabled = true; }
+                    else { del.dataset.armed = '1'; del.textContent = `${T('ui_fl_delete')} (${f.items})?`; }
+                });
                 acts.appendChild(del);
             }
             it.appendChild(acts);
@@ -1285,6 +1960,7 @@
             if (tg.strands > 1 && st.strand) row.appendChild(trayBtn(`${t('ui_pick_remove_strand')} (1/${tg.strands})`, 'removeStrand', null, 'danger'));
             row.appendChild(trayBtn(t('ui_remove'), 'remove', null, 'danger'));
             if (tg.launcher) row.appendChild(trayBtn(t('ui_fw_test'), 'test'));
+            if (tg.spotlight) row.appendChild(trayBtn(t('ui_spot_aim'), 'aim'));
             row.appendChild(trayBtn((tg.kind === 'lights' && !tg.figure) ? t('ui_pick_edit') : t('ui_move'), 'move', null, 'primary'));
             const grp = el('div', 'group'); grp.appendChild(el('span', 'label', t('ui_pick_group')));
             for (const g of st.groups || []) {
@@ -1459,6 +2135,16 @@
                     if (d.groups) S.data.groups = d.groups;
                     const l = $('nearby'); if (l) renderNearby(l, d.nearby);
                     const g = $('groups'); if (g && d.groups) renderGroups(g, d.groups);
+                    const lg = $('live-groups'); if (lg && d.groups) renderLiveGroups(lg, d.groups);
+                }
+                break;
+            case 'floats':
+                if (S.data) {
+                    S.data.floats = d.floats;
+                    if (d.settings && d.settings.group) S.data.settings.group = d.settings.group;
+                    // Not while the decorator is typing a name: a redraw would eat it.
+                    const typing = document.activeElement && document.activeElement.tagName === 'INPUT';
+                    if (!typing && !$('panel').classList.contains('hidden')) render();
                 }
                 break;
             case 'presets':
@@ -1477,6 +2163,7 @@
                     if (S.tab === 'shows' || S.tab === 'fireworks') render();
                 }
                 break;
+            case 'extras': if (S.data && d.extras) { S.data.extras = d.extras; if (d.group) S.data.settings.group = d.group; if (S.tab === 'extras') render(); } break;
             case 'settings': S.settings = d.data; if (S.tab === 'settings') render(); break;
             case 'viewTime': if (S.data) { S.data.settings.viewTime = d.viewTime || null; } break;
             case 'tray':

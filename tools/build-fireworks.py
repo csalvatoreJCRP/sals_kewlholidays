@@ -537,6 +537,35 @@ def snd_chime():
     return w * env_exp(n, 0.9, 0.003) * 0.3
 
 
+def snd_bells():
+    """Sleigh bells, shaken in time with a trot: each shake is a cluster of
+    small closed bells (bright, inharmonic partials, a quick ring) with a
+    little pellet rattle, and the shakes come in pairs."""
+    secs = 1.6
+    n = int(round(SR * secs))
+    out = np.zeros(n)
+    partials = (1.0, 1.59, 2.31, 3.17)
+    shakes = [(0.00, 1.0), (0.11, 0.7), (0.38, 0.95), (0.49, 0.65), (0.76, 1.0), (0.87, 0.7), (1.14, 0.9), (1.25, 0.6)]
+    for at, gain in shakes:
+        for _ in range(9):
+            t0 = at + RNG.uniform(0.0, 0.035)
+            f0 = RNG.uniform(2300.0, 3300.0)
+            m = int(round(SR * 0.32))
+            t = np.arange(m) / SR
+            w = np.zeros(m)
+            for k, r in enumerate(partials):
+                w += np.sin(2 * np.pi * f0 * r * t + RNG.uniform(0, 6.28)) * (0.55 ** k) * np.exp(-t / (0.11 / (1 + k * 0.6)))
+            w *= RNG.uniform(0.5, 1.0) * gain
+            i = int(round(SR * t0))
+            j = min(n, i + m)
+            out[i:j] += w[:j - i]
+        # the pellets: a short bright rattle
+        r = highpass(noise(0.06), 3500) * env_exp(int(round(SR * 0.06)), 0.018, 0.001) * 0.35 * gain
+        i = int(round(SR * at))
+        out[i:i + len(r)] += r[:max(0, min(len(r), n - i))]
+    return out * 0.5
+
+
 SOUNDS = {
     'launch': snd_launch,
     'whistle': snd_whistle,
@@ -550,6 +579,7 @@ SOUNDS = {
     'fountain': snd_fountain,
     'tick': snd_tick,
     'chime': snd_chime,
+    'bells': snd_bells,     # last: a full rebuild draws the others' randomness in the same order as before
 }
 
 
@@ -569,8 +599,10 @@ def write_ogg(name, buf):
                         os.path.join(SFX, name + '.ogg')], check=True)
 
 
-def build_sounds():
+def build_sounds(only=None):
     for name, fn in SOUNDS.items():
+        if only and name not in only:
+            continue
         buf = fn()
         write_ogg(name, buf)
         size = os.path.getsize(os.path.join(SFX, name + '.ogg')) // 1024
@@ -582,7 +614,9 @@ def main():
     if 'scores' in what:
         build_scores()
     if 'sounds' in what:
-        build_sounds()
+        # python tools/build-fireworks.py sounds bells: just those
+        only = [w for w in what if w in SOUNDS]
+        build_sounds(only or None)
 
 
 if __name__ == '__main__':

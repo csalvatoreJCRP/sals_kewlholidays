@@ -25,6 +25,14 @@
     (what a SHOW drives: a track plus a choreography of the four light
     CHANNELS, run against every string in one group, and the location's
     fireworks fired to the same music).
+
+    A FLOAT is a location that rides on a vehicle (or on an object that
+    moves). Its decorations are stored relative to the vehicle, so they
+    go wherever it goes: a lit fire engine for the holiday parade. One
+    float can be worn by many vehicles at once. Which vehicles wear it is
+    a BINDING: this one vehicle, any vehicle with a plate, every vehicle
+    of a model, or one object in the world. A float is a group like any
+    other, so a show runs on it the same way.
 ]]
 
 Config = {}
@@ -161,6 +169,102 @@ Config.Fireworks = {
     MaxCountdown     = 21600,    -- a countdown may be set at most this many seconds ahead (6 h)
 }
 
+-- Spotlights and projectors (shared/spotlights.lua). Beams are the game's own
+-- spotlights; the game draws only so many lights a frame, and a light that
+-- casts shadows costs far more, so both are capped per player.
+Config.Spotlights = {
+    Enabled        = true,     -- kill switch: false draws no spotlight or projector on any client
+    MaxPerLocation = 24,       -- spotlights and projectors per location
+    MaxThrow       = 40.0,     -- how far from its fixture a spotlight may point (m)
+    RenderDistance = 150.0,    -- spotlights farther than this are not drawn
+    MaxBeams       = 16,       -- beams per frame, nearest first
+    MaxShadows     = 0,        -- beams that cast shadows (0 = none; each costs a lot)
+    ShadowDistance = 40.0,     -- only beams this close may cast shadows
+    Brightness     = 4.0,      -- beam strength at brightness 100%
+    ConeScale      = 1.0,      -- widens or narrows every beam
+    Hardness       = 0.0,      -- edge of the beam: 0 soft
+    Falloff        = 1.0,      -- how fast the beam fades with distance
+    Wash           = 0.05,     -- a projector's soft glow behind its pictures, as a share of a spotlight's beam (more drowns the pictures)
+    MaxShapes      = 100,      -- projector pictures per frame, shared by the projectors in view
+    ShapeShare     = 0.3,      -- the share of the textured-triangle ceiling projectors may use
+    ArtDistance    = 90.0,     -- projector pictures are drawn this far
+    ArtAlpha       = 1.0,      -- how bright the pictures are
+    MaxArtRadius   = 10.0,     -- the largest picture circle on a wall (m)
+}
+
+-- Santa's sleigh (shared/sleigh.lua): our own sleigh model with a team of real
+-- deer. A parked team is spawned on each client like a prop (local, never
+-- networked); a ride is a hidden vehicle the sleigh rides on; Santa's flight
+-- is drawn by every client on the same path at the same moment.
+Config.Sleigh = {
+    Enabled        = true,     -- kill switch: false spawns no team, no ride and no flight
+    MaxDeer        = 24,       -- deer spawned at once on each client, nearest sleighs first
+    TeamDistance   = 120.0,    -- a parked team is spawned within this distance
+    RedNoseLight   = true,     -- the red nose casts a little red light
+    Bells          = true,     -- sleigh bells while it moves
+    Sparkle        = true,     -- gold sparkles twinkle around a sleigh, and trail from its runners on a ride
+    BellVolume     = 0.7,
+    BellRange      = 120.0,    -- bells fade out over this distance
+    -- Rides: a player walks up to a parked sleigh and presses E.
+    Ride = {
+        Enabled    = true,
+        Access     = 'everyone',   -- everyone | decorators | admins
+        Vehicle    = 'caddy',      -- the hidden vehicle under the sleigh (a golf cart: quiet, slow, steers well)
+        MaxMinutes = 10,           -- a ride ends after this long, and the sleigh is back where it was parked
+        IdleSeconds = 20,          -- ...or when nobody has been driving it this long
+        -- The sleigh places itself on the hidden vehicle from the vehicle's
+        -- own driver seat, so the driver sits on the sleigh's seat. These
+        -- move it from there (m), for a vehicle where that comes out wrong:
+        NudgeX     = 0.0,          -- left/right,
+        NudgeY     = 0.0,          -- forward/back,
+        NudgeZ     = 0.0,          -- and up/down
+    },
+    -- Santa's flight: the sleigh takes off, circles over its location and
+    -- lands where it was parked.
+    Flight = {
+        Enabled        = true,
+        Access         = 'decorators',   -- who may start one: everyone | decorators | admins
+        AfterCountdown = true,     -- a countdown at a location with a sleigh ends with Santa's flight
+        Radius         = 160.0,    -- the circle it flies (m)
+        Altitude       = 55.0,     -- how high above where it was parked (m)
+        Laps           = 2,
+        Speed          = 22.0,     -- m/s at full speed
+        ViewDistance   = 1500.0,   -- players this close to the circle see the flight
+        Trail          = true,     -- a trail of gold sparkles behind it
+    },
+}
+
+-- The New Year's ball drop (shared/sleigh.lua, client/balldrop.lua): drawn
+-- on each client, no model.
+Config.BallDrop = {
+    Enabled        = true,     -- kill switch: false draws no ball drop on any client
+    MaxPerLocation = 2,
+    RenderDistance = 600.0,    -- a ball drop can be seen from this far
+    Brightness     = 1.0,      -- the ball's glow
+    CastLight      = true,     -- the ball lights up what is around it
+    LightRange     = 18.0,
+    StayDownMinutes = 15,      -- after midnight the ball stays down this long, then rises again over 20 s
+}
+
+-- Floats: decorations on vehicles and moving objects (see FLOAT above).
+-- Needs OneSync: which vehicle wears which float travels with the vehicle
+-- as an entity state bag.
+Config.Vehicles = {
+    Enabled           = true,
+    OwnersMayDecorate = false,   -- players who are not decorators may decorate a vehicle they own (needs oxmysql to look up the owner)
+    SaveBindings      = true,    -- which vehicles wear which float survives a restart; false: bindings last until the server restarts
+    FloatMusic        = true,    -- a show's music plays from the float as it drives past; false: its lights still follow the show, silently
+    SetPlates         = true,    -- decorators may give a vehicle a new plate while binding a float to it
+    OwnedPlates       = false,   -- ...also on a player-owned vehicle, rewriting the plate in the garage database (qb/qbx/esx, oxmysql)
+    MaxDecorated      = 6,       -- floats drawn at once on each client, nearest first
+    RenderDistance    = 150.0,   -- a float farther than this is not drawn
+    MaxOffset         = 12.0,    -- a decoration may sit at most this far from its vehicle's center (m)
+    MaxItems          = 80,      -- decorations per float
+    MaxBulbs          = 2500,    -- bulbs per float, across all of its strings
+    MaxFloats         = 100,     -- floats on the server
+    MaxPerOwner       = 2,       -- floats a vehicle owner (not a decorator) may make
+}
+
 Config.Music = {
     Near      = 15.0,
     Far       = 70.0,
@@ -243,8 +347,8 @@ Config.Shows = {
         { beats = 4, ch = { 'alternate', 'alternate', 'alternate', 'alternate' }, fw = { 'double', 'double', 'cake', 'salvo' } } } },
 }
 
-Config.Persistence = { Enabled = true, File = 'data/decorations.json', SettingsFile = 'data/settings.json', PresetsFile = 'data/presets.json', SaveDelay = 5, Snapshots = 3 }
-Config.Limits = { Enabled = true, Log = true, place = { 20, 30 }, edit = { 30, 30 }, show = { 6, 60 }, state = { 6, 60 }, settings = { 20, 60 }, thumb = { 400, 60 }, fire = { 24, 10 } }
+Config.Persistence = { Enabled = true, File = 'data/decorations.json', SettingsFile = 'data/settings.json', PresetsFile = 'data/presets.json', FloatsFile = 'data/floats.json', SaveDelay = 5, Snapshots = 3 }
+Config.Limits = { Enabled = true, Log = true, place = { 20, 30 }, edit = { 30, 30 }, show = { 6, 60 }, state = { 6, 60 }, settings = { 20, 60 }, thumb = { 400, 60 }, fire = { 24, 10 }, float = { 20, 30 } }
 -- OpenKey is the default key that opens the panel (FiveM key name: 'ADD' is
 -- numpad +, 'F7', 'HOME', 'NUMPAD5' ...). It is only the DEFAULT: each player
 -- can rebind it under Settings > Key Bindings > FiveM, and a change here only
@@ -255,8 +359,10 @@ Config.Integrations = { Notify = 'auto' }   -- 'auto' | 'qb' | 'ox_lib' | 'esx' 
 -- Updates from a public GitHub repository that holds the released resource
 -- and an update.json manifest at its root (made by tools/make-update-manifest.py).
 -- Repo is 'owner/name'. Blank = no checking. AutoApply downloads and writes
--- the new files itself; the resource still has to be restarted to load them
--- (AutoRestart does that too, a minute later, if nobody is decorating).
+-- the new files itself; they load after `refresh` and a restart of the
+-- resource (AutoRestart does both, a minute later, if nobody is decorating).
+-- A restart without refresh keeps the old file list, so a script a release
+-- adds would not load; the resource warns in the console when that happens.
 Config.Update = {
     Enabled     = true,
     Repo        = 'csalvatoreJCRP/sals_kewlholidays',
@@ -346,6 +452,72 @@ Schema = {
         { path = 'Fireworks.SkyLightRange',    type = 'number', label = 'Burst light range (m)', min = 10, max = 300 },
         { path = 'Fireworks.ManualFire',       type = 'bool',   label = 'Decorators may fire by hand', help = 'The launch board in the Shows tab and /holiday launch.' },
         { path = 'Fireworks.MaxCountdown',     type = 'int',    label = 'Longest countdown (s)', min = 10, max = 86400, help = "How far ahead a countdown may be set. 21600 is six hours: set the New Year's Eve one at dinner." },
+    } },
+    { section = 'spotlights', label = 'Spotlights and projectors', items = {
+        { path = 'Spotlights.Enabled',        type = 'bool',   label = 'Spotlights and projectors', help = 'Off: none is drawn on any client and none can be placed.' },
+        { path = 'Spotlights.MaxPerLocation', type = 'int',    label = 'Spotlights per location', min = 1, max = 128 },
+        { path = 'Spotlights.MaxThrow',       type = 'number', label = 'How far a spotlight may point (m)', min = 5, max = 120 },
+        { path = 'Spotlights.RenderDistance', type = 'number', label = 'Spotlight render distance (m)', min = 30, max = 500 },
+        { path = 'Spotlights.MaxBeams',       type = 'int',    label = 'Beams per frame', min = 1, max = 64, help = 'Per player, nearest first. The game draws only so many lights at once; raise with care.' },
+        { path = 'Spotlights.MaxShadows',     type = 'int',    label = 'Beams that cast shadows', min = 0, max = 8, help = 'Shadows look real and cost a lot. 0 is safest; 2 to 4 on strong PCs.' },
+        { path = 'Spotlights.Brightness',     type = 'number', label = 'Beam strength', min = 0.5, max = 50 },
+        { path = 'Spotlights.ConeScale',      type = 'number', label = 'Beam width', min = 0.3, max = 3, help = 'Multiplies every beam width (narrow, wide, flood).' },
+        { path = 'Spotlights.Falloff',        type = 'number', label = 'Beam falloff', min = 0.1, max = 20 },
+        { path = 'Spotlights.Wash',           type = 'number', label = 'Projector glow', min = 0, max = 2, help = "The soft colored light behind a projector's pictures." },
+        { path = 'Spotlights.MaxShapes',      type = 'int',    label = 'Projector pictures per frame', min = 10, max = 300 },
+        { path = 'Spotlights.ArtDistance',    type = 'number', label = 'Projector picture distance (m)', min = 20, max = 300 },
+        { path = 'Spotlights.ArtAlpha',       type = 'number', label = 'Projector picture brightness', min = 0.2, max = 1.5 },
+    } },
+    { section = 'sleigh', label = "Santa's sleigh", items = {
+        { path = 'Sleigh.Enabled',          type = 'bool',   label = "Santa's sleigh", help = 'Off: no reindeer team is spawned, nobody can ride a sleigh and none flies. The sleigh props stay.' },
+        { path = 'Sleigh.MaxDeer',          type = 'int',    label = 'Reindeer at once (per player)', min = 2, max = 64, help = 'Nearest sleighs first. A team past this is spawned when you come closer.' },
+        { path = 'Sleigh.TeamDistance',     type = 'number', label = 'Reindeer spawn within (m)', min = 30, max = 400 },
+        { path = 'Sleigh.RedNoseLight',     type = 'bool',   label = 'The red nose casts light' },
+        { path = 'Sleigh.Bells',            type = 'bool',   label = 'Sleigh bells', help = 'While a sleigh is ridden or flying.' },
+        { path = 'Sleigh.Sparkle',          type = 'bool',   label = 'Sleigh sparkles', help = 'Gold sparkles twinkle around a sleigh you are near, and trail from its runners on a ride.' },
+        { path = 'Sleigh.BellVolume',       type = 'number', label = 'Bell volume (0-1)', min = 0, max = 1 },
+        { path = 'Sleigh.BellRange',        type = 'number', label = 'Bells heard within (m)', min = 20, max = 1000 },
+        { path = 'Sleigh.Ride.Enabled',     type = 'bool',   label = 'Players may ride a sleigh', help = 'Walk up to a parked sleigh with reindeer and press E. Each sleigh can also be closed to rides in the Edit list.' },
+        { path = 'Sleigh.Ride.Access',      type = 'select', label = 'Who may ride', options = { 'everyone', 'decorators', 'admins' } },
+        { path = 'Sleigh.Ride.Vehicle',     type = 'string', label = 'Hidden vehicle under a ridden sleigh', help = "A vehicle model name. The default golf cart (caddy) is quiet, slow and steers well; the sleigh rides on it and it is never seen." },
+        { path = 'Sleigh.Ride.MaxMinutes',  type = 'int',    label = 'Longest ride (minutes)', min = 1, max = 120, help = 'Then the sleigh is back where it was parked.' },
+        { path = 'Sleigh.Ride.IdleSeconds', type = 'int',    label = 'A ride ends after nobody drives it for (s)', min = 5, max = 600 },
+        { path = 'Sleigh.Ride.NudgeX',      type = 'number', label = 'Move the sleigh on the vehicle: left/right (m)', min = -2, max = 2, help = 'The sleigh lines its seat up with the hidden vehicle\'s driver seat by itself. Leave these at 0 unless you changed the vehicle and the driver is off the seat.' },
+        { path = 'Sleigh.Ride.NudgeY',      type = 'number', label = 'Move the sleigh on the vehicle: forward/back (m)', min = -3, max = 3 },
+        { path = 'Sleigh.Ride.NudgeZ',      type = 'number', label = 'Move the sleigh on the vehicle: up/down (m)', min = -2, max = 2 },
+        { path = 'Sleigh.Flight.Enabled',   type = 'bool',   label = "Santa's flight", help = 'A sleigh takes off, circles over its location and lands where it was parked. Everyone nearby sees it.' },
+        { path = 'Sleigh.Flight.Access',    type = 'select', label = 'Who may start a flight', options = { 'everyone', 'decorators', 'admins' } },
+        { path = 'Sleigh.Flight.AfterCountdown', type = 'bool', label = 'A countdown ends with Santa\'s flight', help = 'At a location with a sleigh: at zero it takes off.' },
+        { path = 'Sleigh.Flight.Radius',    type = 'number', label = 'Flight circle (m)', min = 40, max = 2000 },
+        { path = 'Sleigh.Flight.Altitude',  type = 'number', label = 'Flight height (m)', min = 10, max = 400, help = 'Above where the sleigh was parked.' },
+        { path = 'Sleigh.Flight.Laps',      type = 'int',    label = 'Laps', min = 1, max = 10 },
+        { path = 'Sleigh.Flight.Speed',     type = 'number', label = 'Flight speed (m/s)', min = 5, max = 80 },
+        { path = 'Sleigh.Flight.ViewDistance', type = 'number', label = 'Seen within (m)', min = 200, max = 5000 },
+        { path = 'Sleigh.Flight.Trail',     type = 'bool',   label = 'Sparkle trail' },
+    } },
+    { section = 'balldrop', label = 'Ball drop', items = {
+        { path = 'BallDrop.Enabled',         type = 'bool',   label = 'Ball drops', help = 'Off: no ball drop is drawn on any client and none can be placed.' },
+        { path = 'BallDrop.MaxPerLocation',  type = 'int',    label = 'Ball drops per location', min = 1, max = 8 },
+        { path = 'BallDrop.RenderDistance',  type = 'number', label = 'Seen within (m)', min = 50, max = 2000 },
+        { path = 'BallDrop.Brightness',      type = 'number', label = 'Ball brightness', min = 0.2, max = 2 },
+        { path = 'BallDrop.CastLight',       type = 'bool',   label = 'The ball lights up its surroundings' },
+        { path = 'BallDrop.LightRange',      type = 'number', label = 'Light range (m)', min = 2, max = 80 },
+        { path = 'BallDrop.StayDownMinutes', type = 'int',    label = 'Minutes the ball stays down after midnight', min = 1, max = 600 },
+    } },
+    { section = 'vehicles', label = 'Floats (decorated vehicles, experimental)', items = {
+        { path = 'Vehicles.Enabled',           type = 'bool',   label = 'Floats', help = 'Decorations on vehicles and moving objects. Needs OneSync. Off: no float is drawn and none can be made.' },
+        { path = 'Vehicles.OwnersMayDecorate', type = 'bool',   label = 'Players may decorate vehicles they own', help = 'On: a player who is not a decorator may make a float on a vehicle they own and decorate it. Needs oxmysql to look up the owner. Decorators can always decorate any vehicle.' },
+        { path = 'Vehicles.SaveBindings',      type = 'bool',   label = 'Floats stay on their vehicles after a restart', help = 'On: which vehicles wear which float is saved. Off: bindings last until the server restarts (the floats and their decorations are always saved).' },
+        { path = 'Vehicles.FloatMusic',        type = 'bool',   label = "A show's music plays from the float", help = 'On: the music follows the float, louder as it drives past. Off: the lights still follow the show, without sound from the float.' },
+        { path = 'Vehicles.SetPlates',         type = 'bool',   label = 'Decorators may set a new plate', help = 'While binding a float by plate, give the vehicle its own plate (XMAS01) so the float follows it. Never on a player-owned vehicle unless the next setting is on.' },
+        { path = 'Vehicles.OwnedPlates',       type = 'bool',   label = '...also on player-owned vehicles', help = 'Rewrites the plate in the garage database (qb/qbx player_vehicles, ESX owned_vehicles, through oxmysql) and hands the owner new keys where the keys resource allows. Other scripts that remember plates (insurance, MDT, impound) are not updated. Leave off unless you need it.' },
+        { path = 'Vehicles.MaxDecorated',      type = 'int',    label = 'Floats drawn at once', min = 1, max = 40, help = 'On each client, nearest first. A float past this many is not drawn until it comes closer.' },
+        { path = 'Vehicles.RenderDistance',    type = 'number', label = 'Float render distance (m)', min = 30, max = 500 },
+        { path = 'Vehicles.MaxOffset',         type = 'number', label = 'Reach from the vehicle (m)', min = 2, max = 40, help = 'How far from the vehicle center a decoration may sit. Raise it for long trailers and trains.' },
+        { path = 'Vehicles.MaxItems',          type = 'int',    label = 'Decorations per float', min = 1, max = 500 },
+        { path = 'Vehicles.MaxBulbs',          type = 'int',    label = 'Bulbs per float', min = 100, max = 20000 },
+        { path = 'Vehicles.MaxFloats',         type = 'int',    label = 'Floats on the server', min = 1, max = 1000 },
+        { path = 'Vehicles.MaxPerOwner',       type = 'int',    label = 'Floats per vehicle owner', min = 0, max = 20, help = 'For players who are not decorators.' },
     } },
     { section = 'music', label = 'Music', items = {
         { path = 'Music.Near',      type = 'number', label = 'Full volume within (m)', min = 1, max = 200 },

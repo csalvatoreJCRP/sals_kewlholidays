@@ -1,5 +1,344 @@
 # Changelog
 
+## [1.5.1] - 2026-11-23
+
+### A new sleigh
+
+- **Santa's sleigh is our own model now, and it is not broken.** Up to 1.5.0
+  the sleigh was the game's own sleigh prop, which is a wreck: splintered
+  boards, holes in the body, a broken runner. The new one is red lacquer
+  with gold scrollwork, curled gold runners, a green velvet seat with gold
+  buttons, a lit lantern on each side of the dash, colored fairy lights
+  along the rim and a wreath on the back. It casts a warm light at night.
+- **Sleighs already placed change by themselves.** Every sleigh on your
+  server becomes the new one, where it stands, with its reindeer, the first
+  time the server starts with 1.5.1. Nothing to place again.
+- **It works on every game build.** The old sleigh needed build 3095. The
+  new one ships in `stream/`, so the Sleigh tab no longer asks for a build.
+  Upload the whole `stream/` folder: three new files are in it
+  (`sk_santa_sleigh.ydr`, `sk_santa_gifts.ydr`, `sk_sleigh.ytyp`).
+- **Presents made for it.** "Presents in the back" is now Santa's sack, a
+  stack of wrapped presents, a candy cane and a teddy bear behind the seat,
+  and two presents in the footwell clear of the driver's feet.
+- **Sparkles.** Gold sparkles twinkle around a sleigh you are near, and
+  trail from its runners on a ride. *Sleigh sparkles* in Settings turns
+  them off.
+- **Two fit on the seat.** The sleigh sits centered on the hidden vehicle,
+  so the driver and a passenger ride side by side.
+
+### Changed
+
+- When the resource starts, the server console shows one line recommending
+  Sal's Kewl Public Safety Simulator (not on a server that already runs it).
+- **BREAKING (settings):** the three *Sleigh on the vehicle* settings
+  (`Sleigh.Ride.OffsetX`, `OffsetY`, `OffsetZ`) are gone. The sleigh now
+  lines its seat up with the hidden vehicle's own driver seat by itself.
+  Three new settings, *Move the sleigh on the vehicle*
+  (`Sleigh.Ride.NudgeX`, `NudgeY`, `NudgeZ`, all 0), move it from there, and
+  are only needed if you changed the hidden vehicle and the driver ends up
+  off the seat. A saved Offset value is ignored.
+
+### Fixed
+
+- **The reindeer's legs no longer stutter at speed.** A ridden sleigh's top
+  speed sat right on the line between a canter and a gallop, so the team
+  switched between the two over and over, restarting the leg animation each
+  time. The gallop now starts sooner, and a team holds its gait until the
+  speed has clearly changed.
+- **Sleigh rides: the rider and the sleigh no longer vanish.** The hidden
+  vehicle under a ridden sleigh was hidden in a way that also hid everything
+  attached to it, which is the driver and the sleigh itself. It is now made
+  see-through instead, so only the vehicle disappears.
+- **Sleigh rides: no golf cart flashing into view.** Other players could see
+  the hidden vehicle for a moment when a ride started. It is now hidden the
+  instant it reaches each player's game.
+- **The presents no longer bury the sleigh.** The presents in the sleigh were
+  the 2023 gift box props, which are far bigger than they sound (the "large"
+  one is 2.5 m across). See "Presents made for it" above.
+- **The rider sits on the seat.** The driver sat too far back, sunk into the
+  seat cushion. See the settings change above.
+- The Props tab described the 2023 gift boxes as knee and waist high. They
+  are 0.9 m, 1.2 m and 2.5 m, and now say so.
+
+## [1.5.0] - 2026-11-18
+
+### Santa's sleigh and the New Year's ball drop
+
+Asked for by server owners: a ball drop like the one in New York at New
+Year's, and a Christmas sleigh pulled by reindeer. Both are new, in a new
+**Sleigh & ball drop** tab.
+
+- **New Year's ball drop.** A lit ball at the top of a pole, 4 to 40 m tall,
+  on a plaza or a roof. The ball is a faceted crystal sphere of colored
+  panels (**Rainbow**, **Sparkle**, **Color cycle** or **Steady**, in the
+  New Year's colors), turning slowly, with a glow around it that lights up
+  the square. Start a countdown at its location (Shows tab, `00:00` counts
+  to midnight) and the ball starts down in the last minute (10 to 120
+  seconds, your choice) and lands on zero: a flash, a burst of sparkles, the
+  ball races through the colors. Nearby players see **Watch the ball drop**
+  with the countdown. It stays down for a while after midnight, then rises
+  again; a canceled countdown sends it back up. **Test drop** in the Edit
+  list drops it for you alone. Every player sees the same ball at the same
+  height at the same moment.
+- **Santa's sleigh with real reindeer.** The game's own sleigh with a team
+  of the game's own deer in front of it, two to eight, in pairs, all with
+  antlers: tan and brown, all tan, all brown, or all white. They stand,
+  graze or prance while parked. The lead reindeer has a red nose that glows.
+  Leather traces run from the sleigh through every collar, with a gold bell
+  on each, and there are presents in the back.
+- **Ride the sleigh.** Walk up to a parked sleigh and press **E**: you drive
+  it, the team walks, trots, canters and gallops with your speed, and the
+  bells jingle for everyone nearby. Get out to end the ride; the sleigh is
+  back where it was parked. A ride also ends after 10 minutes or when nobody
+  drives it for 20 seconds. Each sleigh can be closed to rides, and who may
+  ride is a setting (everyone, decorators, admins).
+- **Santa's flight.** **Santa's flight** in the tab (or `/holiday sleigh
+  fly`): the sleigh at your location runs, takes off, climbs while it
+  circles over the location (160 m wide, 55 m up, two laps, all settings),
+  comes down and lands where it was parked, with a trail of gold sparkles
+  and its bells. Everyone within 1.5 km sees it, in the same place at the
+  same moment; a player who arrives mid-flight sees it where it is. A
+  countdown at a location with a sleigh ends with Santa's flight (Settings).
+- Sleighs placed from the Props tab before this update can be given a team:
+  **Add reindeer** in the Edit list.
+- New sections in Server settings: **Santa's sleigh** and **Ball drop**.
+- `/holiday sleigh fly | land [location]`, `/holiday balldrop test`.
+- Exports for other scripts: `FlySleigh(location)`, `LandSleigh(location)`.
+- A countdown or a show now starts at a location that has only spotlights, a
+  ball drop or a sleigh (it used to need lights or launchers).
+
+**Updating:** this release adds files. Type `refresh`, then
+`restart sals_kewlholidays`, as for every update. No config changes; the new
+settings have defaults.
+
+## [1.4.2] - 2026-11-15
+
+### Spotlights light trees
+
+Found filming 1.4 on a real server: a spotlight at the foot of a Christmas
+tree, pointing up, barely showed. The needles face outward and the light
+only grazed them, and a tree's branches have no collision, so clicking the
+tree aimed at whatever stood behind it.
+
+- **Aim at a tree and the whole tree lights up.** While aiming, the tool
+  now sees the decorations you placed (a Christmas tree, an inflatable, any
+  prop) even where the game lets a click pass through. It outlines the one
+  under your crosshair and aims at its middle, and the spotlight switches to
+  **Light a tree**: the light comes in from the side, far enough out to
+  strike the branches face on, wide enough for the whole tree, and stops
+  just past it so the building behind stays dark. The fixture stays where
+  you set it, and nobody can see where the light really starts.
+- **Light a tree** is also a switch in the Spotlights tab (with **Tree
+  size**: small, medium, large) for the trees of the map: turn it on, then
+  click the trunk.
+- **Better default colors.** A spotlight with no palette chosen used
+  whichever sorted first, so Halloween came out all red ("blood") and a
+  party all blue. It now uses the holiday's richest palette: orange and
+  purple, rainbow, multicolor, red white and blue.
+- **Projector glow toned down.** The soft light behind a projector's
+  pictures defaulted to 0.35 and painted a bright disk that drowned them;
+  it is 0.05 now (Settings > Spotlights and projectors > Projector glow).
+  Servers that saved their own value keep it.
+
+No config changes.
+
+## [1.4.1] - 2026-11-15
+
+- **Everyone sees the same thing at the same moment.** Spotlights and
+  projectors animate on the network clock every player shares, so two
+  players side by side see the same color, the same fade and the same
+  snowflakes in the same places. (Outside a show they used to run on each
+  player's own clock.)
+
+## [1.4.0] - 2026-11-15
+
+### Spotlights and projectors
+
+A new **Spotlights** tab. Asked for by server owners: "a spotlight in the
+ground pointing at a tree to light it up", "spotlights to light a building
+in different colors", and "projectors that put moving patterns on walls,
+like snowflakes, snowmen, or dancing turkeys".
+
+- **Spotlights.** Set a fixture down like a prop, then click the tree,
+  wall or building front it should light. The beam is the game's own
+  spotlight, in any holiday palette or a color of your own, narrow, wide or
+  flood, at the brightness you choose. It can hold one color, **cycle**
+  through the palette, or run a pattern (fade, twinkle, chase across a
+  location's spotlights, alternate, wave, flicker). **Hide the fixture** for
+  the "buried in the ground" uplight look.
+- **Projectors.** The same fixture throws moving pictures on the wall it
+  points at, like the LED projectors people put on their lawns: falling
+  snow, waving snowmen, a Christmas mix, twinkling stars, rising hearts,
+  tumbling shamrocks, eggs and hopping bunnies, fireworks bursts, bats past
+  the moon, a Halloween mix, **dancing turkeys** in falling leaves, autumn
+  leaves, spinning dreidels, candles, and a party of balloons and confetti.
+  Fifteen projections, each offered under its holidays, with live previews
+  in the tab. Picture size and speed are yours.
+- **Aim by clicking.** While aiming you see the light on the spot under
+  your crosshair; the scroll wheel changes the beam width or picture size.
+  The fixture turns to face what it lights. **Aim** in the Edit list or the
+  aim-and-click tool re-aims a placed one; moving a fixture keeps its aim.
+- **Shows drive them.** Each spotlight has a channel 1-4 like a string of
+  lights. In a show its brightness follows that channel, and dancing
+  turkeys dance to the track's beat. A location with only spotlights still
+  plays the music.
+- **Within budget.** Beams are capped per player (**Beams per frame**, 16);
+  shadows are off by default (**Beams that cast shadows**, 0). Projector
+  pictures are drawn within a share of the same textured-triangle ceiling
+  the bulbs use, split fairly between the projectors in view. A new
+  **Spotlights and projectors** section in Server settings holds every knob.
+- Spotlights stay put: they cannot ride on a float. At most 24 per location
+  (Server settings).
+
+No config changes to existing settings; the new ones have defaults.
+
+## [1.3.3] - 2026-11-13
+
+### Updating: refresh, then restart
+
+Reported by a server that updated to 1.3 in game: opening the panel failed
+with `attempt to index a nil value (field 'Floats')`. 1.3.0 added two
+scripts (`client/floats.lua`, `server/floats.lua`). FXServer reads a
+resource's file list once and keeps it until `refresh`, so an update
+followed by `restart` alone ran the new files without the new scripts.
+
+**If you see that error:** type `refresh`, then
+`restart sals_kewlholidays`, in the server console or txAdmin.
+
+- **The resource notices.** At start it compares the version on disk with
+  the one the server loaded. When they differ it prints what to type in the
+  console and tells admins in game when they connect. The panel shows the
+  same instruction instead of failing, and the server no longer stops
+  partway through starting.
+- **Restart after applying** now runs `refresh` before the restart, and
+  every "update written" message says to type `refresh` first.
+
+No config changes.
+
+## [1.3.2] - 2026-11-13
+
+### Floats: the right vehicle
+
+- **Standing at a vehicle picks the one you mean.** The Vehicles tab used
+  the vehicle whose middle was nearest you (within 8 m), so beside the back
+  of a fire engine it could pick a display car parked next to it, or
+  nothing. It now measures to each vehicle's body (within 4 m), prefers a
+  vehicle everyone can see over one only in your game, and on a near tie
+  prefers the one you last drove. Sitting in the vehicle still picks it.
+- **Display vehicles can carry a float.** A vehicle a script parks on each
+  player's own screen (a display engine at the station, a dealership car)
+  is not shared over the network, so making a float from it used to fail
+  with "That vehicle exists only on your screen". It now carries the float
+  by its spot, the way **On an object** works: every player whose game
+  parks the same vehicle there sees the lights on it. The Vehicles tab says
+  "Only in your game" under such a vehicle; **Decorate**, **Take it off**
+  and **Put it on** (this vehicle) work on it. Plate and whole-model
+  bindings still need a shared vehicle, and a spot float stays at its spot,
+  so a car only you spawned shows its float only to you.
+
+No config changes.
+
+## [1.3.1] - 2026-11-12
+
+### Locations: one place, one location
+
+Reported by a server that decorated several fire stations without changing
+location: every station landed in `main`, so a layout saved as "Station 1"
+held all of them, and Travel took you to a different station depending on
+where you were standing.
+
+- **Move decorations into a location** (Locations tab, and
+  `/holiday claim <meters> [location]`). Stand at a building, name it, pick
+  a distance, and everything around you joins that location, which becomes
+  yours. **Only from** limits it to one location (say `main`). Only what you
+  may edit moves; other players' decorations are left and counted, a
+  float's decorations stay on their vehicle, and launchers past the
+  per-location cap are left out. Decorators reach as far as they can place
+  (`Access.Reach`, 60 m by default); admins can sweep up to 250 m.
+- **Travel goes to the same place every time.** A live location travels
+  to the middle of its largest area instead of the decoration nearest you.
+  A layout saved now centers on its largest area too; layouts saved before
+  1.3.1 keep their old spot until you **Save over** them.
+- **Spread locations are flagged.** A location (or layout) whose
+  decorations sit at several places across the map says "Spread over N
+  separate places" in the Locations tab, the save box says which location
+  it will save and warns before saving a spread one, and saving one warns
+  in chat.
+- **Clearer wording.** The save box says the name is the layout's, not the
+  location's. **Delete** on a layout says the decorations stay up. A grayed
+  **Move**/**Remove** in the Edit list says who placed it.
+
+No config changes.
+
+## [1.3.0] - 2026-11-11
+
+### Floats: decorations on vehicles and moving objects (experimental)
+
+> **Experimental.** Floats are new in 1.3.0 and have not yet been tested
+> on a live server. Expect rough edges: lights can trail a vehicle by a
+> frame at highway speed, and a garage-spawned vehicle may take a couple of
+> seconds to show its float. Turn them off under Settings > Floats if they
+> cause trouble, and please report what you see.
+
+- **Decorate a vehicle and the lights go where it goes.** A float is a set
+  of decorations that rides a vehicle: string lights along the roofline,
+  figures on the doors, inflatables on a flatbed, wreaths on the grille. Make
+  one from a parked vehicle in the new **Vehicles** tab, decorate it with the
+  Props, Lights, Figures and Inflatables tabs as usual (the vehicle is held
+  still while you work), press **Done**, and drive. The strings follow the
+  vehicle's every turn and slope in the same frame. Props ride attached, and
+  never solid, so they cannot throw the vehicle around.
+- **Put a float on as many vehicles as you like.** Pick how:
+  - **This vehicle**: this one, also after it goes back to the garage. It
+    is matched by plate and model together.
+  - **This plate**: any vehicle with the plate.
+  - **Every one of this model**: the whole fleet.
+  - **On an object**: something in the world that moves by itself, like the
+    Ferris wheel. Aim at it and click.
+- **Set a plate while you bind.** Give the parade engine its own plate
+  (`XMAS01`) and the float follows that plate. A plate already used by a
+  vehicle out there, or owned by a player, is refused. A player-owned
+  vehicle's plate is never changed unless the server allows it, and then it
+  is rewritten in the garage database too (qb/qbx `player_vehicles`, ESX
+  `owned_vehicles`, through oxmysql), and the owner gets new keys where the
+  keys resource allows it. Removing a binding can put the old plate back.
+- **Shows run on floats.** A float is a location like any other, so
+  `/holiday show` and the Shows tab drive its lights. The music plays from
+  the float as it drives past (server setting).
+- **Nothing per frame crosses the network.** Which vehicle wears which float
+  rides in the vehicle's state bag. Each client draws the floats near it,
+  nearest first, up to **Floats drawn at once**.
+- **For other scripts:** server exports `ApplyFloat(vehicle, name)`,
+  `ClearFloat(vehicle)`, `GetFloats()` and `GetVehicleFloat(vehicle)`.
+  `vehicle` is an entity or a network id. A garage or job script can
+  decorate the vehicles it spawns.
+- `/holiday float edit` decorates the float on the vehicle you are at, and
+  `/holiday float done` finishes.
+
+### Panel
+
+- The tabs wrap onto a second row instead of scrolling out of sight.
+
+### Requirements
+
+- **Floats need OneSync** (which vehicle wears which float travels as an
+  entity state bag). Everything else works as before without it.
+- Plate lookups (owners decorating their own vehicles, and refusing a plate
+  a player owns) use **oxmysql** when it runs. Without it on a qb/qbx/ESX
+  server, plates cannot be set and owners cannot decorate. Decorators can
+  still make and bind floats.
+
+### Config
+
+- New settings under **Settings > Floats (decorated vehicles, experimental)**:
+  `Vehicles.Enabled`, `OwnersMayDecorate` (off), `SaveBindings` (on),
+  `FloatMusic` (on), `SetPlates` (on), `OwnedPlates` (off), `MaxDecorated`
+  (6), `RenderDistance` (150), `MaxOffset` (12 m), `MaxItems` (80),
+  `MaxBulbs` (2500), `MaxFloats` (100), `MaxPerOwner` (2). New rate-limit
+  bucket `float`. New file `data/floats.json`. Nothing to change on upgrade.
+- A float and a location cannot share a name. Fireworks launchers cannot go
+  on a float.
+
 ## [1.2.7] - 2026-11-07
 
 ### Fireworks
