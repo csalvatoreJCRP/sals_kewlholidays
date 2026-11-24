@@ -5,7 +5,8 @@
 --
 -- THE SLEIGH
 -- Our own sleigh model (stream/sk_santa_sleigh.ydr: red lacquer, gold
--- scrollwork and runners, a green velvet seat, lanterns, fairy lights)
+-- scrollwork and runners, a green velvet seat, lanterns, fairy lights; or
+-- one of the two fire department styles, see THE STYLES below)
 -- pulled by a team of the game's own deer, with antlers, in pairs. The
 -- lead deer can wear a red nose. A sleigh record is a prop record whose
 -- `sleigh` table describes its team; a sleigh placed from the Props tab
@@ -33,6 +34,69 @@ Sleigh = {}
 
 Sleigh.Model = 'sk_santa_sleigh'
 Sleigh.OldModel = 'm23_2_prop_m32_sleigh_01a'     -- the game's wrecked sleigh, used up to 1.5.0
+
+-- THE STYLES (1.6.0). A sleigh is one of three models of our own. All three
+-- share the seat, the floor, the runners and the bar the traces start at,
+-- so everything below (the team, the ride, the flight) is the same for each:
+--   santa   Santa's sleigh
+--   fire    the same sleigh in a fire department's livery: red and chrome,
+--           gold-leaf lettering, beacons, a light bar, a bell, ladders,
+--           rolled hose and a discharge outlet on the back
+--   engine  a fire engine on runners: hood and grille, a windshield with a
+--           light bar, an open cab, a pump panel, compartments, a hose bed
+Sleigh.Styles = { 'santa', 'fire', 'engine' }
+Sleigh.Models = { santa = Sleigh.Model, fire = 'sk_fire_sleigh', engine = 'sk_fire_engine' }
+
+local styleOf = {}
+for style, model in pairs(Sleigh.Models) do styleOf[model] = style end
+
+--- The style of a sleigh model ('santa', 'fire', 'engine'), or nil if the
+--- model is not a sleigh.
+function Sleigh.StyleOf(model) return styleOf[model] end
+function Sleigh.IsModel(model) return styleOf[model] ~= nil end
+
+-- Emergency lights: where the two fire styles flash (sleigh space; the
+-- generator prints these). `a` and `b` are the two sides, which take turns;
+-- `white` flashes between them. A model's own lights cannot flash, so
+-- client/sleigh.lua draws these.
+Sleigh.Emergency = {
+    fire = {
+        a = { { -0.93, 0.62, 1.385 }, { 0.83, -0.31, 1.43 } },
+        b = { { -0.93, -0.62, 1.385 }, { 0.83, 0.31, 1.43 } },
+        white = { { 0.83, 0.0, 1.43 } },
+    },
+    engine = {
+        a = { { -0.80, 0.27, 1.815 }, { 1.60, -0.50, 1.435 } },
+        b = { { -0.80, -0.27, 1.815 }, { 1.60, 0.50, 1.435 } },
+        white = { { -0.80, 0.0, 1.815 } },
+    },
+}
+
+-- Where a hose line is pulled from: the discharge outlets (sleigh space).
+Sleigh.Outlets = {
+    fire = { { 1.47, 0.0, 0.62 } },
+    engine = { { 1.02, 0.725, 0.74 }, { 1.02, -0.725, 0.74 } },
+}
+Sleigh.HoseReach = 5.0     -- a player this close to an outlet may pull a line
+
+--- The outlet of a parked sleigh nearest to a point, in the world: x, y, z
+--- and how far it is; nil for a style without one. The sleigh's x axis in
+--- the world is (cos h, sin h) and its y axis (-sin h, cos h).
+function Sleigh.NearestOutlet(model, coords, heading, px, py, pz)
+    local list = Sleigh.Outlets[styleOf[model] or '']
+    if not list then return nil end
+    local h = math.rad(heading or 0.0)
+    local c, s = math.cos(h), math.sin(h)
+    local best
+    for _, o in ipairs(list) do
+        local x = coords.x + o[1] * c - o[2] * s
+        local y = coords.y + o[1] * s + o[2] * c
+        local z = coords.z + o[3]
+        local d = math.sqrt((x - px) ^ 2 + (y - py) ^ 2 + (z - pz) ^ 2)
+        if not best or d < best.d then best = { x = x, y = y, z = z, d = d } end
+    end
+    return best
+end
 Sleigh.Deer = 'a_c_deer'
 
 -- The team, in the sleigh's own space (x toward its back, y to its right, z up).
@@ -90,7 +154,8 @@ local function bool(v, default)
 end
 
 --- A clean team: pairs 1..4, a coat, the red nose, what the team does
---- while parked, whether players may ride it, and presents in the back.
+--- while parked, whether players may ride it, presents in the back, and
+--- (the fire styles) whether its emergency lights flash.
 function Sleigh.Clean(t)
     t = type(t) == 'table' and t or {}
     local pairs_ = math.floor(tonumber(t.pairs) or 2)
@@ -104,6 +169,7 @@ function Sleigh.Clean(t)
         pose     = pose,
         ride     = bool(t.ride, true),
         presents = bool(t.presents, true),
+        lights   = bool(t.lights, true),
     }
 end
 

@@ -1,5 +1,90 @@
 # Changelog
 
+## [1.6.0] - 2026-11-24
+
+### Fire department sleighs
+
+- **Two new sleighs for the fire department.** The Sleigh tab now asks
+  which **Sleigh** you want before you place it:
+  - **Santa's sleigh**, as before.
+  - **Fire department sleigh**: Santa's sleigh in fire department colors.
+    Red and chrome, "NORTH POLE F.D." in gold leaf, a red beacon on each
+    side of the dash, a light bar behind the seat, a brass bell, a ladder
+    down each side, rolled hose and a discharge outlet on the back.
+  - **Fire engine**: a fire engine built as a sleigh. Hood and grille with
+    headlights and a bell, a windshield frame with a light bar on it, an
+    open cab with a steering wheel, a pump panel with gauges and an outlet
+    on each side, roll-up compartments, a ladder down each side, a hose
+    bed with hose in it and a beacon on each back corner, all on chrome
+    runners.
+  All three take the same reindeer, are ridden the same way and fly the
+  same way. Both fire styles are also in the Props tab.
+- **Who may place a fire sleigh.** By default anyone who may decorate. Turn
+  on *Fire sleighs: only fire crews may place them* in Settings and only
+  admins, players allowed the `holiday.firesleigh` ACE and players in the
+  jobs you list may. They can place and remove their own fire sleigh even
+  if they are not decorators. One player:
+  `add_ace identifier.license:xxxx holiday.firesleigh allow`.
+- **Emergency lights.** The light bars and beacons of the two fire styles
+  flash red and white, and light the ground around them. Each sleigh has a
+  switch, **Emergency lights flash**, in the Sleigh tab and in the Edit
+  list, and on a ride the driver turns them on and off with **G**.
+  *Fire sleighs: emergency lights* in Settings turns them off for the
+  whole server.
+- **A siren.** On a ride, the driver of a fire sleigh turns the game's fire
+  truck siren on and off with **J** (each player can move the key in the
+  game's key settings, under FiveM). Everyone nearby hears it from the
+  sleigh. *Fire sleighs: siren* in Settings turns it off.
+- **Working hose lines, with the hose script your server runs.** The hose
+  is that script's own: its hose, its water, its rules for who may pull
+  one. Without a hose script the hose on the sleighs is for looks.
+  *Fire sleighs: hose lines* in Settings turns all of this off.
+  - **Sal's Kewl Fire Hose** (`sals_kewlfirehose`): walk up to a parked
+    fire sleigh's outlet and press **G** to pull a line from it. A line is
+    dropped when its sleigh is ridden away or flies.
+  - **Fusion Fire Hose, z_hose, Smart Hose and other hose scripts:** these
+    only hand out hose at a vehicle they know as a fire truck. So while one
+    of them runs, a parked fire sleigh stands on a hidden fire truck that
+    nobody sees or bumps into, and the hose script treats the sleigh as an
+    engine: its own prompts, pump panel and hose, at the sleigh. Needs
+    OneSync. New settings: *Fire sleighs: hidden fire truck* (auto, on,
+    off; set it to on for a hose script not named here), the truck's model
+    (`firetruk`, which every hose script lists out of the box) and two
+    numbers that move the hidden truck if your hose script puts its
+    prompts beside the sleigh instead of at it.
+- **Upload the whole `stream/` folder.** Four new files are in it
+  (`sk_fire_sleigh.ydr`, `sk_fire_engine.ydr`, `sk_sleigh_fire.ytyp`,
+  `sk_sleigh_engine.ytyp`). This update adds files: type `refresh`, then
+  `restart sals_kewlholidays`.
+
+### Fixed
+
+- **Updating no longer costs you your decorations.** Everything you place
+  is saved in the resource's own `data` folder, so an update done by
+  deleting the old `sals_kewlholidays` folder and dropping in the new one
+  deleted the decorations, the settings, the saved places and the floats
+  with it, and the city had to be decorated again. From this version the
+  server also keeps a second copy of all four outside the resource folder.
+  When the resource starts and finds its `data` folder empty, it puts
+  everything back from that copy by itself and says so in the console.
+  **This protects every update after this one.** For the update TO this
+  version from an older one, keep your `data` folder: copy it into the new
+  folder, or update with Settings > Updates, which never touches it.
+
+### Changed
+
+- **A sleigh stays where the rider gets out.** Up to 1.5.1 a ridden sleigh
+  went back to where it was placed the moment its rider got out. Now it is
+  parked where the ride ended, reindeer and all: it can be ridden again
+  from there, a fire sleigh's lights keep flashing there and hose is pulled
+  from it there. The same when a ride ends by itself (the longest ride, or
+  nobody driving). Two new settings under Santa's sleigh:
+  *A sleigh stays where the rider gets out* (turn it off for the old
+  behavior), and *Send a left sleigh back after* (minutes with nobody near
+  it; 0, the default, never sends it back). A decorator can always move it
+  back by hand in the Edit list. Santa's flight still takes off and lands
+  where the sleigh stands.
+
 ## [1.5.1] - 2026-11-23
 
 ### A new sleigh

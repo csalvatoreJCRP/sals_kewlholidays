@@ -158,7 +158,10 @@ Free, escrow-protected, no dependencies.
 - **Santa's sleigh with real reindeer.** Our own sleigh (red lacquer, gold
   scrollwork and runners, lit lanterns, fairy lights, Santa's sack in the
   back) pulled by two to eight of the game's deer, with antlers, a
-  red-nosed lead and gold bells.
+  red-nosed lead and gold bells. Or one of two **fire department sleighs**:
+  the sleigh in fire department colors, or a fire engine on runners, both
+  with emergency lights that flash and, with Sal's Kewl Fire Hose running,
+  hose lines players can pull.
   Players walk up and press E to ride it; **Santa's flight** takes off,
   circles over the location for everyone to see, and lands where it was
   parked.
@@ -498,7 +501,12 @@ then rises again over twenty seconds; a canceled countdown sends it back up.
 In the Edit list a ball drop has **Test drop** (it drops in ten seconds, for
 you only) and **Ball** (change any of the above). At most two per location.
 
-**Santa's sleigh.** Choose the **Reindeer** (2, 4, 6 or 8), their **Coats**
+**Santa's sleigh.** Choose the **Sleigh**: **Santa's sleigh**, the **Fire
+department sleigh** (Santa's sleigh in fire department colors: gold-leaf
+lettering, beacons, a light bar, a brass bell, ladders, rolled hose) or the
+**Fire engine** (a fire engine on runners: hood and grille, a windshield
+with a light bar, an open cab, a pump panel, compartments, a hose bed and
+ladders). Then choose the **Reindeer** (2, 4, 6 or 8), their **Coats**
 (mixed tan and brown, tan, brown or white), what they do **While parked**
 (standing, grazing, prancing), the **red nose** on the lead reindeer,
 **presents in the back** (Santa's sack, wrapped presents and a teddy bear),
@@ -510,14 +518,57 @@ antlers, harnessed to the sleigh with leather traces and a gold bell on every
 collar. A sleigh placed from the Props tab has no team; **Add reindeer** in
 the Edit list gives it one (and **Reindeer** there changes it, or removes it).
 
+**Who may place a fire sleigh.** Anyone who may decorate, unless **Fire
+sleighs: only fire crews may place them** is on. Then only admins, players
+allowed the fire sleigh ACE (`holiday.firesleigh`) and players in the jobs
+listed under **Fire sleighs: jobs** may, and they can place and remove
+their own fire sleigh even if they are not decorators. To allow one player,
+add this to `server.cfg` with their own identifier:
+
+    add_ace identifier.license:xxxx holiday.firesleigh allow
+
+or a group: `add_ace group.fire holiday.firesleigh allow`.
+
+**Fire department sleighs.** The light bar and beacons of the two fire
+styles flash red and white while **Emergency lights flash** is on for that
+sleigh (the Sleigh tab, or the Edit list); on a ride the driver turns them
+on and off with **G**, and runs the **siren** (the game's fire truck siren,
+heard by everyone nearby) with **J**; each player can move that key in the
+game's key settings.
+
+Hose from a parked fire sleigh comes from the hose script your server runs,
+with that script's own hose, water and rules for who may pull one:
+
+- **Sal's Kewl Fire Hose** (`sals_kewlfirehose`): walk up to the sleigh's
+  discharge outlet (on the back of the fire department sleigh, on each side
+  of the fire engine's pump panel) and press **G**. The line is dropped
+  when the sleigh is ridden away or flies.
+- **Fusion Fire Hose, z_hose, Smart Hose and other hose scripts** only hand
+  out hose at a vehicle they know as a fire truck. While one of them runs,
+  a parked fire sleigh stands on a hidden fire truck (`firetruk`) that
+  nobody sees or bumps into, so the hose script treats the sleigh as an
+  engine and shows its own prompts there. This needs OneSync. If the
+  prompts come up beside the sleigh instead of at it, move the hidden truck
+  with **Hidden truck: back from the sleigh** and **right of the sleigh**
+  in Settings. For a hose script not named here, set **Fire sleighs: hidden
+  fire truck** to `on`, and the truck model to one that script lists.
+
+Without a hose script the hose is for looks. A fire sleigh needs its
+reindeer for the lights and the hose: one placed from the Props tab gets
+them with **Add reindeer**.
+
 **Riding.** Walk up to a parked sleigh and press **E**. You drive it; the
 reindeer walk, trot, canter and gallop with your speed and the bells jingle
-for everyone nearby. Get out to end the ride and the sleigh is back where it
-was parked. A ride also ends after **Longest ride** (10 minutes) or when
-nobody has driven it for 20 seconds. Under the sleigh is a hidden vehicle
-(a golf cart by default, **Hidden vehicle under a ridden sleigh**) that
-nobody sees; if a rider does not sit on the sleigh's seat with your game
-build, the three **Sleigh on the vehicle** settings move it.
+for everyone nearby. Get out to end the ride, and the sleigh stays where you
+left it: it is parked there, with its reindeer, and can be ridden again
+from there. A ride also ends, the same way, after **Longest ride**
+(10 minutes) or when nobody has driven it for 20 seconds. To have a sleigh
+go back to where it was placed instead, turn off **A sleigh stays where the
+rider gets out**, or set **Send a left sleigh back after** to a number of
+minutes. Under the sleigh is a hidden vehicle (a golf cart by default,
+**Hidden vehicle under a ridden sleigh**) that nobody sees; if you change
+it and the driver ends up off the sleigh's seat, the three **Move the
+sleigh on the vehicle** settings move it.
 
 **Santa's flight.** **Santa's flight** in the tab (or `/holiday sleigh fly`)
 sends the sleigh at your location up: it runs, takes off, climbs while it
@@ -727,6 +778,25 @@ The firework effects, launchers, loads, holiday shapes and programs are in
 particle effects to try in order, with what to draw where none loads.
 
 ## Updates
+
+**Your decorations and an update.** Everything placed on your server is
+saved in this resource's own `data` folder: `decorations.json`,
+`settings.json`, `presets.json` (saved places) and `floats.json`. No release
+ever contains those files, so copying a new version over the old folder
+keeps them. Deleting the old folder and dropping the new one in deletes
+them with it. From 1.6.0 that no longer costs you anything: the server
+keeps a second copy of all four outside the resource folder, and a start
+that finds `data` empty puts them back from it and says so in the console
+(`Put back from the server's own copy: ...`). A file that is there always
+wins over the copy. Two things to know:
+
+- The first update from a version before 1.6.0 has no copy to fall back
+  on yet. Keep your `data` folder for that one: copy it into the new
+  folder, or update with Settings > Updates, which never touches it.
+- The copy lives in the server's own storage (FXServer's key-value store,
+  under the resource's name). Moving to a new machine, take the `data`
+  folder with you. To start over with nothing, use **Clear** in the
+  panel; deleting the files alone brings them back.
 
 The resource checks a public GitHub repository for a newer release and can
 apply it. The shipped repository is

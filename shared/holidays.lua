@@ -68,6 +68,8 @@ Holidays.Catalog = {
             { model = 'xm3_prop_xm3_snowman_01c',    label = 'Snowman (hat)', build = 2802, desc = 'The snowman in a hat.' },
             { model = 'm23_2_prop_m32_candycane_01a', label = 'Candy cane (giant)', build = 3095, desc = 'A giant striped candy cane, about a person tall. Two frame a doorway.' },
             { model = 'sk_santa_sleigh',             label = 'Sleigh', far = true, desc = 'Santa\'s sleigh, full size: red and gold, lanterns lit, fairy lights along the rim. Lawns and rooftops; the Sleigh tab gives it reindeer.' },
+            { model = 'sk_fire_sleigh',              label = 'Sleigh (fire department)', far = true, desc = 'The sleigh in fire department colors: red and chrome, gold-leaf lettering, beacons, a light bar, a brass bell, ladders and rolled hose. The Sleigh tab gives it reindeer and flashing lights.' },
+            { model = 'sk_fire_engine',              label = 'Fire engine on runners', far = true, desc = 'A fire engine built as a sleigh: hood and grille, a windshield with a light bar, an open cab, a pump panel, a hose bed and ladders, on chrome runners. The Sleigh tab gives it reindeer and flashing lights.' },
             { model = 'm23_2_prop_m32_giftbox_small_01a', label = 'Gift box (small)', build = 3095, desc = 'A wrapped gift with a bow, waist high (0.9 m).' },
             { model = 'm23_2_prop_m32_giftbox_med_01a',   label = 'Gift box (medium)', build = 3095, desc = 'A wrapped gift, chest high (1.2 m).' },
             { model = 'm23_2_prop_m32_giftbox_lar_01a',   label = 'Gift box (large)', build = 3095, desc = 'A big stack of wrapped gifts, 2.5 m across and taller than a person.' },

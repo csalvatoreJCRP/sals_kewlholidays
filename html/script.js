@@ -29,7 +29,8 @@
         fw: { rack: 'mortar', load: 'mixed', palette: null, channel: 1, lift: 1.0, tilt: 0, hidden: false },
         spot: { fixture: 'flood', mode: 'beam', beam: 'wide', bright: 1.0, palette: null, rgb: null, cycle: false, pattern: 'on', channel: 1, hidden: false, art: null, scale: 1.0, speed: 1.0 },
         countdown: { target: '10', open: false },
-        sleigh: { pairs: 2, coat: 'mixed', pose: 'stand', nose: true, ride: true, presents: true },
+        sleigh: { pairs: 2, coat: 'mixed', pose: 'stand', nose: true, ride: true, presents: true, lights: true },
+        sleighStyle: 'santa',
         ball: { height: 14, ball: 2.4, seconds: 60, pattern: 'rainbow', palette: null },
         editing: null,
         settings: null, tipsInline: null,
@@ -696,6 +697,7 @@
         switchRow(container, T('ui_sl_nose'), st.nose, v => { st.nose = v; onChange(); });
         switchRow(container, T('ui_sl_presents'), st.presents, v => { st.presents = v; onChange(); });
         switchRow(container, T('ui_sl_ride'), st.ride, v => { st.ride = v; onChange(); }, X.ride ? T('ui_sl_ride_help') : T('ui_sl_ride_off_server'));
+        switchRow(container, T('ui_sl_lights'), st.lights !== false, v => { st.lights = v; onChange(); }, T('ui_sl_lights_help'));
     }
     // A ball: its size, how long it takes to drop, its colors and pattern;
     // with the pole's height when it is being placed.
@@ -750,12 +752,22 @@
         const sbox = section(body, T('ui_sl_title'), T('ui_sl_help'));
         if (!X.sleigh.enabled) { sbox.appendChild(el('div', 'note', T('ui_sl_disabled'))); return; }
         if (!X.sleigh.available) { sbox.appendChild(el('div', 'note', T('ui_sl_unavailable'))); return; }
+        // Which sleigh: Santa's, or one of the two fire department styles.
+        const styles = X.sleigh.styles || ['santa'];
+        if (!styles.includes(S.sleighStyle)) S.sleighStyle = styles[0];
+        if (styles.length > 1) {
+            segment(labeled(sbox, T('ui_sl_style')), styles, S.sleighStyle, v => { S.sleighStyle = v; render(); }, v => T('sl_style_' + v));
+            sbox.appendChild(el('div', 'note', T('sl_style_help_' + S.sleighStyle)));
+        }
         sleighSettings(sbox, S.sleigh, () => render());
         const row = el('div', 'row');
         const go = el('button', 'btn primary', T('ui_sl_place'));
-        go.disabled = !d.who.decorator;
+        // A fire sleigh has its own rule: fire crews, or every decorator.
+        const fireStyle = S.sleighStyle !== 'santa';
+        go.disabled = fireStyle ? !d.who.fire : !d.who.decorator;
+        if (fireStyle && !d.who.fire) sbox.appendChild(el('div', 'note', T('sleigh_fire_no')));
         go.title = T('ui_tray_hint_prop');
-        go.addEventListener('click', () => post('placeSleigh', { sleigh: Object.assign({}, S.sleigh) }));
+        go.addEventListener('click', () => post('placeSleigh', { sleigh: Object.assign({}, S.sleigh), style: S.sleighStyle }));
         row.appendChild(go);
         sbox.appendChild(row);
         // Santa's flight from this location.
@@ -1103,7 +1115,7 @@
                 ed.appendChild(inner);
                 const save = el('button', 'btn small primary', T('ui_save'));
                 save.addEventListener('click', () => {
-                    post('restyle', { id: n.id, changes: { sleigh: { pairs: st.pairs, coat: st.coat, pose: st.pose, nose: !!st.nose, ride: !!st.ride, presents: !!st.presents } } });
+                    post('restyle', { id: n.id, changes: { sleigh: { pairs: st.pairs, coat: st.coat, pose: st.pose, nose: !!st.nose, ride: !!st.ride, presents: !!st.presents, lights: st.lights !== false } } });
                     S.editing = null;
                     setTimeout(() => post('refreshNearby'), 400);
                 });

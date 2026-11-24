@@ -5,7 +5,7 @@ lua54 'yes'
 name 'sals_kewlholidays'
 author 'C. Salvatore'
 description "In-game holiday decorating: props, lit inflatables, wreaths, string lights and rope-light figures on any building or on parade floats that drive, spotlights and projectors, Santa's sleigh with real reindeer that players ride and that flies, a New Year's ball drop, synchronized light shows and fireworks displays set to music, countdowns, a season calendar that swaps the decor for you, and every setting edited in game"
-version '1.5.1'
+version '1.6.0'
 
 shared_scripts {
     'shared/defaults.lua',  -- must load first: defines Config (the defaults) and Schema; there is no config.lua
@@ -68,6 +68,8 @@ files {
 data_file 'DLC_ITYP_REQUEST' 'stream/sk_inflatables.ytyp'
 -- Santa's sleigh and what rides in it (tools/build-sleigh.py -> tools/blender-sleigh.py -> tools/cwconv).
 data_file 'DLC_ITYP_REQUEST' 'stream/sk_sleigh.ytyp'
+data_file 'DLC_ITYP_REQUEST' 'stream/sk_sleigh_fire.ytyp'      -- the sleigh in fire department colors
+data_file 'DLC_ITYP_REQUEST' 'stream/sk_sleigh_engine.ytyp'    -- the fire engine on runners
 
 provide 'holiday_decor'
 

@@ -203,6 +203,38 @@ Config.Sleigh = {
     RedNoseLight   = true,     -- the red nose casts a little red light
     Bells          = true,     -- sleigh bells while it moves
     Sparkle        = true,     -- gold sparkles twinkle around a sleigh, and trail from its runners on a ride
+    -- The two fire department styles (the sleigh in fire colors, and the fire engine on runners).
+    Fire = {
+        -- Who may place one. false: anyone who may decorate. true: only fire
+        -- crews, which are admins, players allowed the ACE below, and players
+        -- in one of the jobs below (on duty, if "Jobs must be on duty" is on).
+        -- A fire crew member may place and remove their own fire sleigh even
+        -- without being a decorator.
+        --   one player:   add_ace identifier.license:xxxx holiday.firesleigh allow
+        --   a group:      add_ace group.fire holiday.firesleigh allow
+        Restricted = false,
+        PlaceAce   = 'holiday.firesleigh',
+        PlaceJobs  = {},       -- e.g. { 'fire', 'lsfd' }
+        Lights     = true,     -- their light bar and beacons flash (each sleigh also has its own switch)
+        Siren      = true,     -- on a ride, the driver can run a siren (key J by default; players rebind it in the game's key settings)
+        SirenSound = 'RESIDENT_VEHICLES_SIREN_FIRETRUCK_WAIL_01',   -- the game's fire truck wail; any game siren sound name
+        SirenKey   = 'J',
+        Hose       = true,     -- hose lines from a fire sleigh, through whichever hose script the server runs
+        -- Other hose scripts (Fusion Fire Hose, z_hose, Smart Hose and the
+        -- like) only hand out hose at a vehicle they know as a fire truck. So
+        -- a parked fire sleigh can stand on a HIDDEN fire truck: nobody sees
+        -- it or bumps into it, and the hose script treats the sleigh as an
+        -- engine, with its own prompts, pump and rules.
+        Pump        = 'auto',      -- auto: only while one of the PumpFor scripts runs | on: always | off: never
+        PumpFor     = { 'fh-firehose', 'z_hose', 'SmartHose' },
+        PumpVehicle = 'firetruk',  -- a model your hose script lists as a fire truck
+        -- Where the hidden truck stands, from the middle of the sleigh (m).
+        -- The defaults put a fire truck's left side, where hose scripts
+        -- expect the pump panel, along the sleigh's left side.
+        PumpBack    = 1.0,
+        PumpRight   = 0.55,
+        PumpRange   = 80.0,        -- the hidden truck exists only while a player is this close
+    },
     BellVolume     = 0.7,
     BellRange      = 120.0,    -- bells fade out over this distance
     -- Rides: a player walks up to a parked sleigh and presses E.
@@ -210,7 +242,15 @@ Config.Sleigh = {
         Enabled    = true,
         Access     = 'everyone',   -- everyone | decorators | admins
         Vehicle    = 'caddy',      -- the hidden vehicle under the sleigh (a golf cart: quiet, slow, steers well)
-        MaxMinutes = 10,           -- a ride ends after this long, and the sleigh is back where it was parked
+        MaxMinutes = 10,           -- a ride ends after this long
+        -- Where a sleigh is after a ride. true: it stays where the rider got
+        -- out, and is parked there (it can be ridden again from there, its
+        -- lights flash there, hose is pulled from it there). false: it goes
+        -- back to where it was placed, as it did up to 1.5.1.
+        Stay       = true,
+        -- A sleigh left somewhere by a ride goes back to where it was placed
+        -- after this many minutes with nobody near it. 0: never.
+        HomeMinutes = 0,
         IdleSeconds = 20,          -- ...or when nobody has been driving it this long
         -- The sleigh places itself on the hidden vehicle from the vehicle's
         -- own driver seat, so the driver sits on the sleigh's seat. These
@@ -347,7 +387,11 @@ Config.Shows = {
         { beats = 4, ch = { 'alternate', 'alternate', 'alternate', 'alternate' }, fw = { 'double', 'double', 'cake', 'salvo' } } } },
 }
 
-Config.Persistence = { Enabled = true, File = 'data/decorations.json', SettingsFile = 'data/settings.json', PresetsFile = 'data/presets.json', FloatsFile = 'data/floats.json', SaveDelay = 5, Snapshots = 3 }
+-- Mirror: a second copy of everything saved (decorations, settings, places,
+-- floats) is kept in the server's own storage, OUTSIDE this resource's
+-- folder. An update that replaces the whole folder takes data/ with it; at
+-- the next start the empty data/ is filled again from that copy.
+Config.Persistence = { Enabled = true, Mirror = true, File = 'data/decorations.json', SettingsFile = 'data/settings.json', PresetsFile = 'data/presets.json', FloatsFile = 'data/floats.json', SaveDelay = 5, Snapshots = 3 }
 Config.Limits = { Enabled = true, Log = true, place = { 20, 30 }, edit = { 30, 30 }, show = { 6, 60 }, state = { 6, 60 }, settings = { 20, 60 }, thumb = { 400, 60 }, fire = { 24, 10 }, float = { 20, 30 } }
 -- OpenKey is the default key that opens the panel (FiveM key name: 'ADD' is
 -- numpad +, 'F7', 'HOME', 'NUMPAD5' ...). It is only the DEFAULT: each player
@@ -475,12 +519,24 @@ Schema = {
         { path = 'Sleigh.RedNoseLight',     type = 'bool',   label = 'The red nose casts light' },
         { path = 'Sleigh.Bells',            type = 'bool',   label = 'Sleigh bells', help = 'While a sleigh is ridden or flying.' },
         { path = 'Sleigh.Sparkle',          type = 'bool',   label = 'Sleigh sparkles', help = 'Gold sparkles twinkle around a sleigh you are near, and trail from its runners on a ride.' },
+        { path = 'Sleigh.Fire.Restricted',  type = 'bool',   label = 'Fire sleighs: only fire crews may place them', help = 'Off: anyone who may decorate. On: only admins, players allowed the ACE below and players in the jobs below. They may place and remove their own fire sleigh even without being decorators.' },
+        { path = 'Sleigh.Fire.PlaceAce',    type = 'string', label = 'Fire sleighs: ACE', help = 'One player: add_ace identifier.license:xxxx holiday.firesleigh allow. A group: add_ace group.fire holiday.firesleigh allow.' },
+        { path = 'Sleigh.Fire.PlaceJobs',   type = 'list',   label = 'Fire sleighs: jobs', help = 'Comma-separated job names, for example fire, lsfd. "Jobs must be on duty" under Who may decorate applies.' },
+        { path = 'Sleigh.Fire.Lights',      type = 'bool',   label = 'Fire sleighs: emergency lights', help = 'The light bar and beacons of the two fire department sleighs flash. Each sleigh also has its own switch, and its driver can turn them on and off.' },
+        { path = 'Sleigh.Fire.Siren',       type = 'bool',   label = 'Fire sleighs: siren', help = "On a ride, the driver of a fire sleigh turns the game's fire truck siren on and off (J by default; each player can rebind it in the game's key settings, under FiveM). Everyone nearby hears it from the sleigh." },
+        { path = 'Sleigh.Fire.Hose',        type = 'bool',   label = 'Fire sleighs: hose lines', help = "Players get working hose from a parked fire sleigh, through the hose script your server runs. With Sal's Kewl Fire Hose: G at the sleigh's outlet. With another hose script: see the next settings. That script's own rules (jobs, items) apply." },
+        { path = 'Sleigh.Fire.Pump',        type = 'select', label = 'Fire sleighs: hidden fire truck', options = { 'auto', 'on', 'off' }, help = "Other hose scripts (Fusion Fire Hose, z_hose, Smart Hose) only work at a fire truck, so a parked fire sleigh can stand on a hidden one that nobody sees. auto: only while one of those scripts runs. on: always (for a hose script we do not know by name). off: never. Needs OneSync." },
+        { path = 'Sleigh.Fire.PumpVehicle', type = 'string', label = 'Fire sleighs: hidden truck model', help = 'A vehicle model your hose script lists as a fire truck. firetruk is in every hose script out of the box.' },
+        { path = 'Sleigh.Fire.PumpBack',    type = 'number', label = 'Hidden truck: back from the sleigh (m)', min = -6, max = 6, help = 'Move the hidden truck until your hose script puts its hose prompts at the sleigh.' },
+        { path = 'Sleigh.Fire.PumpRight',   type = 'number', label = 'Hidden truck: right of the sleigh (m)', min = -4, max = 4 },
         { path = 'Sleigh.BellVolume',       type = 'number', label = 'Bell volume (0-1)', min = 0, max = 1 },
         { path = 'Sleigh.BellRange',        type = 'number', label = 'Bells heard within (m)', min = 20, max = 1000 },
         { path = 'Sleigh.Ride.Enabled',     type = 'bool',   label = 'Players may ride a sleigh', help = 'Walk up to a parked sleigh with reindeer and press E. Each sleigh can also be closed to rides in the Edit list.' },
         { path = 'Sleigh.Ride.Access',      type = 'select', label = 'Who may ride', options = { 'everyone', 'decorators', 'admins' } },
         { path = 'Sleigh.Ride.Vehicle',     type = 'string', label = 'Hidden vehicle under a ridden sleigh', help = "A vehicle model name. The default golf cart (caddy) is quiet, slow and steers well; the sleigh rides on it and it is never seen." },
-        { path = 'Sleigh.Ride.MaxMinutes',  type = 'int',    label = 'Longest ride (minutes)', min = 1, max = 120, help = 'Then the sleigh is back where it was parked.' },
+        { path = 'Sleigh.Ride.MaxMinutes',  type = 'int',    label = 'Longest ride (minutes)', min = 1, max = 120, help = 'Then the ride ends where the sleigh is.' },
+        { path = 'Sleigh.Ride.Stay',        type = 'bool',   label = 'A sleigh stays where the rider gets out', help = 'On: the sleigh is parked where the ride ended, and can be ridden again from there. Off: it goes back to where it was placed, as it did before 1.6.0.' },
+        { path = 'Sleigh.Ride.HomeMinutes', type = 'int',    label = 'Send a left sleigh back after (minutes, 0 = never)', min = 0, max = 1440, help = 'A sleigh a ride left somewhere goes back to where it was placed after this long with nobody near it.' },
         { path = 'Sleigh.Ride.IdleSeconds', type = 'int',    label = 'A ride ends after nobody drives it for (s)', min = 5, max = 600 },
         { path = 'Sleigh.Ride.NudgeX',      type = 'number', label = 'Move the sleigh on the vehicle: left/right (m)', min = -2, max = 2, help = 'The sleigh lines its seat up with the hidden vehicle\'s driver seat by itself. Leave these at 0 unless you changed the vehicle and the driver is off the seat.' },
         { path = 'Sleigh.Ride.NudgeY',      type = 'number', label = 'Move the sleigh on the vehicle: forward/back (m)', min = -3, max = 3 },
