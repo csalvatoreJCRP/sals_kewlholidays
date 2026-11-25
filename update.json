@@ -2,7 +2,7 @@
   "version": "1.6.0",
   "published": "2026-11-24",
   "changelog": [
-    "IMPORTANT: this version cannot be installed from inside the game. Download it from your Cfx portal, copy it over the old folder (keep your data folder), type refresh, then restart sals_kewlholidays.",
+    "IMPORTANT: this version cannot be installed from inside the game with the version you are running. Download it from your Cfx portal, copy it over the old folder (keep your data folder), type refresh, then restart sals_kewlholidays. In-game updates work again from 1.6.1 on.",
     "**Two new sleighs for the fire department.** The Sleigh tab now asks which **Sleigh** you want before you place it:",
     "**Santa's sleigh**, as before.",
     "**Fire department sleigh**: Santa's sleigh in fire department colors. Red and chrome, \"NORTH POLE F.D.\" in gold leaf, a red beacon on each side of the dash, a light bar behind the seat, a brass bell, a ladder down each side, rolled hose and a discharge outlet on the back.",
@@ -13,8 +13,7 @@
     "**Working hose lines, with the hose script your server runs.** The hose is that script's own: its hose, its water, its rules for who may pull one. Without a hose script the hose on the sleighs is for looks. *Fire sleighs: hose lines* in Settings turns all of this off.",
     "**Sal's Kewl Fire Hose** (`sals_kewlfirehose`): walk up to a parked fire sleigh's outlet and press **G** to pull a line from it. A line is dropped when its sleigh is ridden away or flies.",
     "**Fusion Fire Hose, z_hose, Smart Hose and other hose scripts:** these only hand out hose at a vehicle they know as a fire truck. So while one of them runs, a parked fire sleigh stands on a hidden fire truck that nobody sees or bumps into, and the hose script treats the sleigh as an engine: its own prompts, pump panel and hose, at the sleigh. Needs OneSync. New settings: *Fire sleighs: hidden fire truck* (auto, on, off; set it to on for a hose script not named here), the truck's model (`firetruk`, which every hose script lists out of the box) and two numbers that move the hidden truck if your hose script puts its prompts beside the sleigh instead of at it.",
-    "**Upload the whole `stream/` folder.** Four new files are in it (`sk_fire_sleigh.ydr`, `sk_fire_engine.ydr`, `sk_sleigh_fire.ytyp`, `sk_sleigh_engine.ytyp`). This update adds files: type `refresh`, then `restart sals_kewlholidays`.",
-    "**Updating no longer costs you your decorations.** Everything you place is saved in the resource's own `data` folder, so an update done by deleting the old `sals_kewlholidays` folder and dropping in the new one deleted the decorations, the settings, the saved places and the floats with it, and the city had to be decorated again. From this version the server also keeps a second copy of all four outside the resource folder. When the resource starts and finds its `data` folder empty, it puts everything back from that copy by itself and says so in the console. **This protects every update after this one.** For the update TO this version from an older one, keep your `data` folder: copy it into the new folder, or update with Settings > Updates, which never touches it."
+    "**Upload the whole `stream/` folder.** Four new files are in it (`sk_fire_sleigh.ydr`, `sk_fire_engine.ydr`, `sk_sleigh_fire.ytyp`, `sk_sleigh_engine.ytyp`). This update adds files: type `refresh`, then `restart sals_kewlholidays`."
   ],
   "files": []
 }
