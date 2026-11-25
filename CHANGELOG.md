@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.6.1] - 2026-11-24
+
+### Fixed
+
+- **The in-game update works.** *Apply update* in Settings (and
+  `/holidayadmin update apply`) had never worked, in any version up to
+  1.6.0. Two faults, one behind the other:
+  - The release on GitHub did not match its own file list (three files
+    were stored there with different line endings), so the update stopped
+    with "3 of 332 file(s) could not be downloaded or verified" and
+    changed nothing.
+  - Behind that, the updater wrote every sound, model, picture and
+    encrypted script cut off after its first few bytes. A server that got
+    past the first fault was left with a resource that could not start.
+  From this version every file is written whole and read back to be sure.
+  Before the update writes over anything, it proves that this server
+  writes a test file correctly and that every folder it needs is there;
+  if either fails, nothing is changed. `fxmanifest.lua` is written last,
+  so an update that is interrupted can simply be run again.
+- **Versions up to 1.6.0 cannot update themselves, and no longer try.**
+  Their *Apply update* now answers "manifest lists no files" and changes
+  nothing, and the changelog they show says to download from the Cfx
+  portal. Install this version by hand once: download it from your Cfx
+  portal, copy it over the old folder (keep your `data` folder), type
+  `refresh`, then `restart sals_kewlholidays`. From 1.6.1 on, updates
+  apply from the game.
+- **If an update on 1.6.0 or older ended with "files could not be
+  placed":** the resource folder on that server is damaged and will not
+  start again. Copy this version over it as above. The `data` folder, with
+  your decorations and settings, was not touched.
+
+### Changed
+
+- **An update that needs a new folder changes nothing.** A resource cannot
+  create folders. Up to 1.6.0 the update wrote what it could and reported
+  the rest; now it stops before writing over anything, names the folder
+  to create, and is run again.
+- **An update brings the escrow key file too**, so an updated folder is the
+  Cfx download byte for byte.
+
 ## [1.6.0] - 2026-11-24
 
 ### Fire department sleighs
@@ -69,7 +109,7 @@
   everything back from that copy by itself and says so in the console.
   **This protects every update after this one.** For the update TO this
   version from an older one, keep your `data` folder: copy it into the new
-  folder, or update with Settings > Updates, which never touches it.
+  folder.
 
 ### Changed
 

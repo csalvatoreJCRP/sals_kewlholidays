@@ -792,7 +792,7 @@ wins over the copy. Two things to know:
 
 - The first update from a version before 1.6.0 has no copy to fall back
   on yet. Keep your `data` folder for that one: copy it into the new
-  folder, or update with Settings > Updates, which never touches it.
+  folder.
 - The copy lives in the server's own storage (FXServer's key-value store,
   under the resource's name). Moving to a new machine, take the `data`
   folder with you. To start over with nothing, use **Clear** in the
@@ -801,7 +801,7 @@ wins over the copy. Two things to know:
 The resource checks a public GitHub repository for a newer release and can
 apply it. The shipped repository is
 [csalvatoreJCRP/sals_kewlholidays](https://github.com/csalvatoreJCRP/sals_kewlholidays)
-on `main` (Settings → Updates to change it). It fetches `update.json` at start and
+on `main` (Settings → Updates to change it). It fetches `update2.json` at start and
 every few hours; a newer version is announced in the console and in the
 Settings tab, where **Apply update** downloads every file in the manifest,
 verifies each by size and CRC32 before writing anything, never touches
@@ -816,10 +816,26 @@ applying** runs `refresh` and the restart a minute later when no show is
 running. `/holidayadmin update check|apply` does the same
 from chat or the server console.
 
+**Applying an update from the game needs 1.6.1 or newer.** The updater in
+every version up to 1.6.0 was broken: it could not write sounds, models or
+encrypted scripts whole. Those versions now answer **Apply update** with
+"manifest lists no files" and change nothing. Install 1.6.1 or newer by
+hand once (download it from your Cfx portal, copy it over the old folder,
+keep `data`, `refresh`, `restart sals_kewlholidays`); after that, updates
+apply from the game. If an update on 1.6.0 or older ended with "files could
+not be placed", that resource folder is damaged: copy the Cfx download over
+it. `data` was not touched.
+
+Before an update writes over anything, it proves that the server writes a
+test file correctly (it leaves a small `.update-probe` file in the resource
+folder) and that every folder it needs is there. If either fails, nothing
+is changed. Every file is read back after it is written, and
+`fxmanifest.lua` goes last, so an interrupted update can be run again.
+
 Limits, by design: a resource cannot create folders or delete files, so a
-release that adds a new folder reports the files it could not place (create
-the folder and apply again), and files a release removed simply stop being
-loaded.
+release that adds a new folder stops before changing anything and names
+the folder (create it, empty, and apply again), and files a release
+removed simply stop being loaded.
 
 ### Publishing a release (vendor)
 
@@ -830,18 +846,27 @@ loaded.
    plain text (every `.lua` outside `escrow_ignore` must carry the `FXAP`
    escrow header), checks the version matches this tree, clones or
    updates `..\sals_kewlholidays-public`, replaces its contents with the
-   build, writes `update.json` with `tools/make-update-manifest.py`,
-   commits `Release <version>`, tags `v<version>`, pushes, attaches the
-   zip to a GitHub Release (`gh` CLI), and fetches the published
-   `update.json` back to confirm. `-DryRun` does everything but commit,
-   push and release.
+   build, writes `update2.json` and `update.json` with
+   `tools/make-update-manifest.py`, checks that what is staged in git is
+   what the manifest promises, byte for byte
+   (`tools/check-update-repo.py`), commits `Release <version>`, tags
+   `v<version>`, pushes, attaches the zip to a GitHub Release (`gh` CLI),
+   and fetches the published `update2.json` back to confirm. `-DryRun`
+   does everything but commit, push and release.
+
+`update2.json` is the manifest. `update.json` is what versions up to 1.6.0
+read; it carries the version and the changelog and **must never list a
+file**, because those versions damage the resource when they write. The
+tools enforce it. The public repository has a `.gitattributes` of
+`* -text`, so git stores every file byte for byte: without it, git on
+Windows changes line endings and the files no longer match the manifest.
 
 By hand, the same thing is: `python tools/make-update-manifest.py
-<escrowed folder>` (writes `update.json` beside its `fxmanifest.lua`: the
-version, the newest CHANGELOG section, every file's size and CRC32, with
-`data/`, `tools/`, `docs/` excluded), then commit that folder's contents
-with `update.json` to the root of the public repository on the branch
-customers' servers are set to.
+<escrowed folder>` (writes `update2.json` and `update.json` beside its
+`fxmanifest.lua`: the version, the newest CHANGELOG section, every file's
+size and CRC32, with `data/`, `tools/`, `docs/` excluded), then commit that
+folder's contents with both files to the root of the public repository on
+the branch customers' servers are set to.
 
 ## Rebuilding the music
 

@@ -401,7 +401,7 @@ Config.Commands = { Main = 'holiday', OpenKey = 'ADD' }
 Config.Integrations = { Notify = 'auto' }   -- 'auto' | 'qb' | 'ox_lib' | 'esx' | 'native'
 
 -- Updates from a public GitHub repository that holds the released resource
--- and an update.json manifest at its root (made by tools/make-update-manifest.py).
+-- and an update2.json manifest at its root (made by tools/make-update-manifest.py).
 -- Repo is 'owner/name'. Blank = no checking. AutoApply downloads and writes
 -- the new files itself; they load after `refresh` and a restart of the
 -- resource (AutoRestart does both, a minute later, if nobody is decorating).
@@ -582,8 +582,8 @@ Schema = {
         { path = 'Music.AllowMute', type = 'bool',   label = 'Players may mute' },
     } },
     { section = 'update', label = 'Updates', items = {
-        { path = 'Update.Enabled',     type = 'bool',   label = 'Check for updates', help = 'Fetches update.json from the repository below at start and every few hours.' },
-        { path = 'Update.Repo',        type = 'string', label = 'GitHub repository (owner/name)', help = 'Public repository holding the released resource and its update.json.' },
+        { path = 'Update.Enabled',     type = 'bool',   label = 'Check for updates', help = 'Fetches update2.json from the repository below at start and every few hours.' },
+        { path = 'Update.Repo',        type = 'string', label = 'GitHub repository (owner/name)', help = 'Public repository holding the released resource and its update2.json.' },
         { path = 'Update.Branch',      type = 'string', label = 'Branch' },
         { path = 'Update.CheckHours',  type = 'number', label = 'Check every (hours)', min = 1, max = 168 },
         { path = 'Update.AutoApply',   type = 'bool',   label = 'Apply updates automatically', help = 'Downloads and writes the new files, verified by size and checksum, never touching data/. A restart loads them.' },
