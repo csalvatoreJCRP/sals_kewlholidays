@@ -96,6 +96,7 @@ Config.Lights = {
     HaloDistance    = 60.0,     -- the textured halo is spent on bulbs this close; farther ones keep the cheap glow
     NearDistance    = 12.0,     -- the glow strengthens a little as you come within this (m), ramping smoothly
     FarCoreDistance = 25.0,     -- past this a bulb is one diamond instead of two (it is a few pixels across): twice the bulbs for the same cost
+    RoundDistance   = 10.0,     -- bulbs closer than this are drawn round, from the triangles the frame has left over; past it a bulb is a few pixels and a diamond reads as a dot
     SagRatio        = 0.03,
     SagMax          = 0.30,
     MaxBulbs        = 3000,     -- shared by every string on screen, nearer ones get more; a four-door barn front with icicles is about 2000
@@ -456,6 +457,7 @@ Schema = {
         { path = 'Lights.HaloScale',       type = 'number', label = 'Halo size (x core)', min = 1, max = 8 },
         { path = 'Lights.HaloAlpha',       type = 'int',    label = 'Halo strength', min = 0, max = 255 },
         { path = 'Lights.HaloMin',         type = 'number', label = 'Halo minimum radius (m)', min = 0, max = 1, help = 'The glow never shrinks below this, however close you stand.' },
+        { path = 'Lights.RoundDistance',   type = 'number', label = 'Round bulbs within (m)', min = 0, max = 40, help = 'Closer bulbs are drawn round instead of as diamonds, using only the triangles the frame has left over, so no bulbs are dropped for it. 0 turns it off.' },
         { path = 'Lights.NearDistance',    type = 'number', label = 'Glow boost within (m)', min = 0, max = 100, help = 'The glow strengthens a little as you come within this distance, ramping smoothly. 0 turns it off.' },
         { path = 'Lights.SagRatio',        type = 'number', label = 'Sag between points (ratio)', min = 0, max = 0.2, help = '0 for dead-straight strings.' },
         { path = 'Lights.DrawWire',        type = 'bool',   label = 'Draw the wire' },

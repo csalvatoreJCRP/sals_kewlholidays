@@ -5,7 +5,7 @@ lua54 'yes'
 name 'sals_kewlholidays'
 author 'C. Salvatore'
 description "In-game holiday decorating: props, lit inflatables, wreaths, string lights and rope-light figures on any building or on parade floats that drive, spotlights and projectors, Santa's sleigh with real reindeer that players ride and that flies, a New Year's ball drop, synchronized light shows and fireworks displays set to music, countdowns, a season calendar that swaps the decor for you, and every setting edited in game"
-version '1.6.1'
+version '1.6.2'
 
 shared_scripts {
     'shared/defaults.lua',  -- must load first: defines Config (the defaults) and Schema; there is no config.lua

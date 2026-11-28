@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.6.2] - 2026-11-28
+
+### Fixed
+
+- **No more square glow around each bulb.** Up close, lights on a float
+  or a building showed a hard-edged colored diamond around every bulb,
+  even under the soft glow. When a frame has more bulbs than soft glows to
+  go around, the bulbs without one used to get a big flat stand-in glow,
+  and a flat shape that size reads as a square however faint. Those bulbs
+  now get a small colored body around the bright filament instead, and a
+  bulb with a soft glow gets nothing under it.
+- **Bulbs are round up close, not diamonds.** Within 10 m, where a bulb
+  is big enough on screen for its shape to show, it is drawn round.
+  Round costs more to draw, so it only uses what the frame has left over
+  after every string has its share: no display drops bulbs for it. A
+  display too big for the leftover keeps its diamond bulbs up close, a
+  whole string at a time (never round for half a string). Farther away a
+  bulb is a few pixels and looks the same either way.
+
+### Added
+
+- Setting **Round bulbs within (m)** (`Lights.RoundDistance`, default
+  10) in Settings > Lights. 0 turns round bulbs off.
+
 ## [1.6.1] - 2026-11-24
 
 ### Fixed
